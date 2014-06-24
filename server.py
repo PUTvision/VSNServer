@@ -19,6 +19,7 @@ def recvall(sock, count):
 TCP_IP = '192.168.0.100'
 TCP_PORT = 5001
 
+#table holding a 200-sample history of activation level
 activation_history = [0] * 200
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
