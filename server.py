@@ -6,14 +6,6 @@ import matplotlib.gridspec as gridspec
 import time
 import math
 
-def lowpass(prev_sample, input):
-    gain = 1
-    time_constant = 1
-    sample_time = 0.1
-    output = (gain/time_constant) * input + prev_sample * pow(math.e, -1.0 *(sample_time/time_constant))
-    return output
-
-
 def recvall(sock, count):
     buf = b''
     while count:
@@ -27,7 +19,6 @@ def recvall(sock, count):
 TCP_IP = '192.168.0.100'
 TCP_PORT = 5001
 
-activation_level_past = 0
 activation_history = [0] * 200
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,7 +32,6 @@ gs = gridspec.GridSpec(1, 2, width_ratios=[2,5])
 
 ax1 = plt.subplot(gs[0])
 ax2 = plt.subplot(gs[1])
-
 
 plt.ion()
 plt.show()
@@ -58,19 +48,13 @@ line, = ax2.plot(activation_history)
 
 
 while True:
-    nonzero = float(recvall(conn, 16))
+    percentage = float(recvall(conn, 16))
+    activation_level = float(recvall(conn, 16))
     length = recvall(conn, 16)
     stringData = recvall(conn, int(length))
     data = np.fromstring(stringData, dtype='uint8')
     decimg = cv2.imdecode(data, 1)
     cv2.imshow('SERVER', decimg)
-
-    height, width = decimg.shape[:2]
-    percentage = (nonzero * 100 / (height * width))
-    print "white pixel percentage %.3f" % percentage, " %", "\r",
-
-    activation_level = lowpass(activation_level_past, percentage)
-    activation_level_past = activation_level
 
     values = [percentage]
 
