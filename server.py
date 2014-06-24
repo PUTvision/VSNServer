@@ -3,9 +3,8 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
-import time
-import math
 
+#receives complete compressed image payload
 def recvall(sock, count):
     buf = b''
     while count:
