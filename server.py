@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
+import thread
 
 # receives complete compressed image payload
 def recvall(sock, count):
@@ -14,6 +15,35 @@ def recvall(sock, count):
         count -= len(newbuf)
     return buf
 
+#opens separate socket for each connected client
+def client_handler(clientsocket, clientaddr):
+    print "Accepted connection from: ", clientaddr
+
+    while 1:
+        #receive white pixel percentage and current activation level
+        percentage = float(recvall(clientsocket, 16))
+        activation_level = float(recvall(clientsocket, 16))
+        #receive the length of the image payload then pull the whole image through the socket
+        length = recvall(clientsocket, 16)
+        string_data = recvall(clientsocket, int(length))
+        data = np.fromstring(string_data, dtype='uint8')
+        #decode jpg image to numpy array and display
+        decimg = cv2.imdecode(data, 1)
+        cv2.imshow('SERVER', decimg)
+
+        #update the bar graph
+        values = [percentage]
+        for rect, h in zip(rects, values):
+            rect.set_height(h)
+        #update the activation level graph
+        activation_history.append(activation_level)
+        del activation_history[0]
+        line.set_ydata(activation_history)
+        #draw the figure
+        plt.draw()
+        key = cv2.waitKey(2)
+    clientsocket.close()
+    print "client socket closed"
 
 TCP_IP = '192.168.0.100'
 TCP_PORT = 5001
@@ -21,10 +51,9 @@ TCP_PORT = 5001
 #table holding a 200-sample history of activation level
 activation_history = [0] * 200
 #create socket and listen for incoming client requests
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((TCP_IP, TCP_PORT))
-s.listen(True)
-conn, addr = s.accept()
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serversocket.bind((TCP_IP, TCP_PORT))
+serversocket.listen(True)
 
 #create a figure with given width ratios
 fig = plt.figure()
@@ -47,33 +76,11 @@ plt.ylim([0, 200])
 line, = ax2.plot(activation_history)
 
 while True:
-    #receive white pixel percentage and current activation level
-    percentage = float(recvall(conn, 16))
-    activation_level = float(recvall(conn, 16))
-    #receive the length of the image payload then pull the whole image through the socket
-    length = recvall(conn, 16)
-    stringData = recvall(conn, int(length))
-    data = np.fromstring(stringData, dtype='uint8')
-    #decode jpg image to numpy array and display
-    decimg = cv2.imdecode(data, 1)
-    cv2.imshow('SERVER', decimg)
+    print "Server is listening for connections"
+    clientsocket, clientaddr = serversocket.accept()
+    thread.start_new_thread(client_handler, (clientsocket, clientaddr))
 
-    #update the bar graph
-    values = [percentage]
-    for rect, h in zip(rects, values):
-        rect.set_height(h)
-    #update the activation level graph
-    activation_history.append(activation_level)
-    del activation_history[0]
-    line.set_ydata(activation_history)
-    #draw the figure
-    plt.draw()
-
-    key = cv2.waitKey(1)
-    if key == 27:
-        break
-
-s.close()
+serversocket.close()
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
