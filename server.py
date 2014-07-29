@@ -87,16 +87,16 @@ def update_plot_1():
     global curve_4, bar_4, cam_plot_4
 
     curve_1.setData(activation_history[0])
-    bar_1.setData([0, 200], percentage[0])
+    bar_1.setData([0, 20], percentage[0])
 
     curve_2.setData(activation_history[1])
-    bar_2.setData([0, 200], percentage[1])
+    bar_2.setData([0, 20], percentage[1])
 
     curve_3.setData(activation_history[2])
-    bar_3.setData([0, 200], percentage[2])
+    bar_3.setData([0, 20], percentage[2])
 
     curve_4.setData(activation_history[3])
-    bar_4.setData([0, 200], percentage[3])
+    bar_4.setData([0, 20], percentage[3])
 
 # set default background color to white
 pg.setConfigOption('background', 'w')
@@ -111,7 +111,7 @@ curve_1 = cam_plot_1.plot(pen='r')
 bar_1 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
 cam_plot_1.addItem(bar_1)
 #set the scale of the plot
-cam_plot_1.setYRange(0, 300)
+cam_plot_1.setYRange(0, 100)
 
 #setup plot 2
 cam_plot_2 = win.addPlot(title="picam02")
@@ -119,7 +119,7 @@ curve_2 = cam_plot_2.plot(pen='r')
 bar_2 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
 cam_plot_2.addItem(bar_2)
 #set the scale of the plot
-cam_plot_2.setYRange(0, 300)
+cam_plot_2.setYRange(0, 100)
 
 #next row
 win.nextRow()
@@ -130,7 +130,7 @@ curve_3 = cam_plot_3.plot(pen='r')
 bar_3 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
 cam_plot_3.addItem(bar_3)
 #set the scale of the plot
-cam_plot_3.setYRange(0, 300)
+cam_plot_3.setYRange(0, 100)
 
 #setup plot 3
 cam_plot_4 = win.addPlot(title="picam04")
@@ -138,7 +138,7 @@ curve_4 = cam_plot_4.plot(pen='r')
 bar_4 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
 cam_plot_4.addItem(bar_4)
 #set the scale of the plot
-cam_plot_4.setYRange(0, 300)
+cam_plot_4.setYRange(0, 100)
 
 
 timer_plot_1 = QtCore.QTimer()
