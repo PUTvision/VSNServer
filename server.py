@@ -6,8 +6,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import time
 
-import pyqtgraph.examples
-pyqtgraph.examples.run()
+# import pyqtgraph.examples
+# pyqtgraph.examples.run()
 
 ### global variables ###
 #white pixel percentage
