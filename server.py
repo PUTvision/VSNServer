@@ -10,15 +10,18 @@ import time
 # pyqtgraph.examples.run()
 
 ### global variables ###
-#white pixel percentage
+# white pixel percentage
 percentage = np.zeros((4, 1))
-#activation level history
+# current activation level
+activation = np.zeros((4, 1))
+# activation level history
 activation_history = np.zeros((4, 200))
 decimg = []
 
 ### connection details ###
 TCP_IP = '192.168.0.100'
 TCP_PORT = 5001
+
 
 # receives complete compressed image payload
 def recvall(sock, count):
@@ -49,7 +52,7 @@ def incoming():
 
 
 def service_clients(clientsocket, clientaddr):
-    global percentage, activation_history, decimg
+    global percentage, decimg, activation
     while True:
         node = recvall(clientsocket, 8)
         whitepixels = float(recvall(clientsocket, 32))
@@ -60,31 +63,42 @@ def service_clients(clientsocket, clientaddr):
         data = np.fromstring(string_data, dtype='uint8')
         #decode jpg image to numpy array and display
         decimg = cv2.imdecode(data, 1)
-        # if(decimg != None):
-        #     cv2.imshow('SERVER', decimg)
         if node == "picam01 ":
-            activation_history[0] = np.roll(activation_history[0], -1)
-            activation_history[0][199] = activation_level
+            activation[0] = activation_level
             percentage[0] = whitepixels
         elif node == "picam02 ":
-            activation_history[1] = np.roll(activation_history[1], -1)
-            activation_history[1][199] = activation_level
+            activation[1] = activation_level
             percentage[1] = whitepixels
         elif node == "picam03 ":
-            activation_history[2] = np.roll(activation_history[2], -1)
-            activation_history[2][199] = activation_level
+            activation[2] = activation_level
             percentage[2] = whitepixels
         elif node == "picam04 ":
-            activation_history[3] = np.roll(activation_history[3], -1)
-            activation_history[3][199] = activation_level
+            activation[3] = activation_level
             percentage[3] = whitepixels
         key = cv2.waitKey(1)
+        print activation
+
 
 def update_plot_1():
+
+    global activation, activation_history
     global curve_1, bar_1, cam_plot_1
     global curve_2, bar_2, cam_plot_2
     global curve_3, bar_3, cam_plot_3
     global curve_4, bar_4, cam_plot_4
+
+    # TODO: loopify (to make things awesome, loop over an array of plot objects - future work)
+    activation_history[0] = np.roll(activation_history[0], -1)
+    activation_history[0][199] = activation[0]
+
+    activation_history[1] = np.roll(activation_history[1], -1)
+    activation_history[1][199] = activation[1]
+
+    activation_history[2] = np.roll(activation_history[2], -1)
+    activation_history[2][199] = activation[2]
+
+    activation_history[3] = np.roll(activation_history[3], -1)
+    activation_history[3][199] = activation[3]
 
     curve_1.setData(activation_history[0])
     bar_1.setData([0, 20], percentage[0])
@@ -97,6 +111,7 @@ def update_plot_1():
 
     curve_4.setData(activation_history[3])
     bar_4.setData([0, 20], percentage[3])
+
 
 # set default background color to white
 pg.setConfigOption('background', 'w')
@@ -140,10 +155,9 @@ cam_plot_4.addItem(bar_4)
 #set the scale of the plot
 cam_plot_4.setYRange(0, 100)
 
-
 timer_plot_1 = QtCore.QTimer()
 timer_plot_1.timeout.connect(update_plot_1)
-timer_plot_1.start(100)
+timer_plot_1.start(200)
 
 if __name__ == '__main__':
     server_thread = threading.Thread(target=incoming, args=())

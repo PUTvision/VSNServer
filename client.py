@@ -28,7 +28,7 @@ print "Client running, press ESC to quit"
 
 filename = "log.csv"            # log file name - if logging is enabled
 activation_level = 0            # default starting activation level
-sample_time = 1                 # sample time at startup
+sample_time = 0.1               # sample time at startup
 flag_senddata = False           # default behavior - do not send the image data
 
 # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
@@ -42,6 +42,11 @@ def lowpass(prev_sample, input_val, sample_time_lowpass):
 def img_process():
 
     global background, activation_level, data, percentage, sample_time
+
+    # wait for slackers to finish
+    while threading.active_count() > 3:
+        print "eek!"
+        time.sleep(0.01)
 
     #queue a call to itself after sample time has elapsed to ensure periodic firing
     threading.Timer(sample_time, img_process).start()
@@ -102,6 +107,7 @@ while True:
     # main loop
     # TODO: add the change of sample time based on activity level
     key = cv2.waitKey(50)
+    print "thread number", threading.active_count()
     if key == 27:  # exit on ESC
         break
 
