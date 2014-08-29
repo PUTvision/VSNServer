@@ -76,8 +76,6 @@ def service_clients(clientsocket, clientaddr):
             activation[3] = activation_level
             percentage[3] = whitepixels
         key = cv2.waitKey(1)
-        print activation
-
 
 def update_plot_1():
 
@@ -87,18 +85,6 @@ def update_plot_1():
     global curve_3, bar_3, cam_plot_3
     global curve_4, bar_4, cam_plot_4
 
-    # TODO: loopify (to make things awesome, loop over an array of plot objects - future work)
-    activation_history[0] = np.roll(activation_history[0], -1)
-    activation_history[0][199] = activation[0]
-
-    activation_history[1] = np.roll(activation_history[1], -1)
-    activation_history[1][199] = activation[1]
-
-    activation_history[2] = np.roll(activation_history[2], -1)
-    activation_history[2][199] = activation[2]
-
-    activation_history[3] = np.roll(activation_history[3], -1)
-    activation_history[3][199] = activation[3]
 
     curve_1.setData(activation_history[0])
     bar_1.setData([0, 20], percentage[0])
@@ -111,6 +97,12 @@ def update_plot_1():
 
     curve_4.setData(activation_history[3])
     bar_4.setData([0, 20], percentage[3])
+
+    for idx in range(0, 4):
+        activation_history[idx] = np.roll(activation_history[idx], -1)
+        activation_history[idx][199] = activation[idx]
+
+
 
 
 # set default background color to white
