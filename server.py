@@ -6,14 +6,26 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import time
 
+# TODO: create a dependency table as python dictionary with list, e.g. table = {'picam01' : [1.5, 0.2, 1.1, 0, 0]}
+# elements can then be accessed as table['picam0'][1] -> 1st element of list corresponding to the 'picam01' entry
+
 # import pyqtgraph.examples
 # pyqtgraph.examples.run()
 
-### global variables ###
+dependency_table = {'picam01': [0.0, 0.5, 0.5, 0.5],
+                    'picam02': [0.5, 0.0, 0.5, 0.5],
+                    'picam03': [0.5, 0.5, 0.0, 0.5],
+                    'picam04': [0.5, 0.5, 0.5, 0.0]
+                    }
+
+
+# ## global variables ###
 # white pixel percentage
 percentage = np.zeros((4, 1))
 # current activation level
 activation = np.zeros((4, 1))
+# current neighbouring nodes activation level
+activation_neighbours = np.zeros((4, 1))
 # activation level history
 activation_history = np.zeros((4, 200))
 decimg = []
@@ -34,6 +46,7 @@ def recvall(sock, count):
         else:
             time.sleep(0.001)
     return buf
+
 
 def incoming():
     #create socket and listen for incoming client requests
@@ -64,27 +77,42 @@ def service_clients(clientsocket, clientaddr):
         #decode jpg image to numpy array and display
         decimg = cv2.imdecode(data, 1)
         if node == "picam01 ":
-            activation[0] = activation_level
+            activation_neighbours[0] = 0
+            for idx in (0, 3):
+                activation_neighbours[0] += dependency_table['picam01'][idx] * activation[idx][0]
+            clientsocket.send(str(activation_neighbours[0][0]).ljust(32))
+            activation[0] = activation_level + activation_neighbours[0][0]
             percentage[0] = whitepixels
         elif node == "picam02 ":
-            activation[1] = activation_level
+            activation_neighbours[1] = 0
+            for idx in (0, 3):
+                activation_neighbours[1] += dependency_table['picam02'][idx] * activation[idx][0]
+            clientsocket.send(str(activation_neighbours[1][0]).ljust(32))
+            activation[1] = activation_level + activation_neighbours[1][0]
             percentage[1] = whitepixels
         elif node == "picam03 ":
-            activation[2] = activation_level
+            activation_neighbours[2] = 0
+            for idx in (0, 3):
+                activation_neighbours[2] += dependency_table['picam03'][idx] * activation[idx][0]
+            clientsocket.send(str(activation_neighbours[2][0]).ljust(32))
+            activation[2] = activation_level + activation_neighbours[2][0]
             percentage[2] = whitepixels
         elif node == "picam04 ":
-            activation[3] = activation_level
+            activation_neighbours[3] = 0
+            for idx in (0, 3):
+                activation_neighbours[3] += dependency_table['picam04'][idx] * activation[idx][0]
+            clientsocket.send(str(activation_neighbours[3][0]).ljust(32))
+            activation[3] = activation_level + activation_neighbours[3][0]
             percentage[3] = whitepixels
         key = cv2.waitKey(1)
+        print(np.transpose(activation_neighbours))
 
 def update_plot_1():
-
     global activation, activation_history
     global curve_1, bar_1, cam_plot_1
     global curve_2, bar_2, cam_plot_2
     global curve_3, bar_3, cam_plot_3
     global curve_4, bar_4, cam_plot_4
-
 
     curve_1.setData(activation_history[0])
     bar_1.setData([0, 20], percentage[0])
@@ -101,7 +129,6 @@ def update_plot_1():
     for idx in range(0, 4):
         activation_history[idx] = np.roll(activation_history[idx], -1)
         activation_history[idx][199] = activation[idx]
-
 
 
 

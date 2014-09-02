@@ -33,6 +33,7 @@ activation_level = 0            # default starting activation level
 sample_time = 0.1               # sample time at startup
 gain = 0.1                      # gain at startup
 flag_senddata = False           # default behavior - do not send the image data
+activation_neighbours = 0       # weighted activity of neighbouring nodes
 
 # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
 def lowpass(prev_sample, input_val, sample_time_lowpass):
@@ -41,15 +42,24 @@ def lowpass(prev_sample, input_val, sample_time_lowpass):
     return output
 
 
+# receives the given number of bytes from socket
+def recvall(recv_socket, count):
+    buf = b''
+    while count:
+        newbuf = recv_socket.recv(count)
+        if newbuf is not None:
+            buf += newbuf
+            count -= len(newbuf)
+        else:
+            time.sleep(0.05)
+    return buf
+
+
 def img_process():
 
     lock.acquire()
 
-    global background, activation_level, data, percentage, sample_time
-
-    # wait for slackers to finish
-    while threading.active_count() > 3:
-        time.sleep(0.01)
+    global background, activation_level, data, percentage, sample_time, activation_neighbours
 
     #queue a call to itself after sample time has elapsed to ensure periodic firing
     threading.Timer(sample_time, img_process).start()
@@ -76,7 +86,7 @@ def img_process():
 
     # compute the sensor state based on captured images
     activation_level_new = lowpass(activation_level, percentage, sample_time)
-    activation_level = activation_level_new
+    activation_level = activation_level_new + activation_neighbours
 
     ##### TODO: implement functionality allowing to choose whether or not to send the image of choice (fg, bg, raw)
 
@@ -107,13 +117,23 @@ def img_process():
     # filehandle.write(str(time.clock() - start) + "\r\n")
     # filehandle.close()
 
+
+def get_params():
+    global sock, activation_neighbours
+    while True:
+        activation_neighbours = float(recvall(sock, 32))
+        time.sleep(0.05)
+
+#thread listening for params from the server
+params_listener = threading.Thread(target=get_params, args=())
+params_listener.daemon = True
+params_listener.start()
 # launch the whole process
 img_process()
 
 while True:
 
     # main loop
-    # TODO: add the change of sample time based on activity level
     key = cv2.waitKey(50)
     if key == 27:  # exit on ESC
         break
@@ -123,6 +143,7 @@ while True:
     else:
         sample_time = 0.1
         gain = 0.1
+
 
 # if we ever get here ...
 sock.close()
