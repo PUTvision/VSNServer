@@ -66,7 +66,7 @@ def incoming():
 def service_clients(clientsocket, clientaddr):
     global percentage, decimg, activation
     while True:
-        node = recvall(clientsocket, 8)
+        node_name = recvall(clientsocket, 8)
         whitepixels = float(recvall(clientsocket, 32))
         activation_level = float(recvall(clientsocket, 32)) + 1
         #receive the length of the image payload then pull the whole image through the socket
@@ -75,36 +75,26 @@ def service_clients(clientsocket, clientaddr):
         data = np.fromstring(string_data, dtype='uint8')
         #decode jpg image to numpy array and display
         decimg = cv2.imdecode(data, 1)
-        if node == "picam01 ":
-            activation_neighbours[0] = 0
-            for idx in xrange(0, 3):
-                activation_neighbours[0] += dependency_table['picam01'][idx] * activation[idx][0]
-            clientsocket.send(str(activation_neighbours[0][0]).ljust(32))
-            activation[0] = activation_level + activation_neighbours[0][0]
-            percentage[0] = whitepixels
-        elif node == "picam02 ":
-            activation_neighbours[1] = 0
-            for idx in (0, 3):
-                activation_neighbours[1] += dependency_table['picam02'][idx] * activation[idx][0]
-            clientsocket.send(str(activation_neighbours[1][0]).ljust(32))
-            activation[1] = activation_level + activation_neighbours[1][0]
-            percentage[1] = whitepixels
-        elif node == "picam03 ":
-            activation_neighbours[2] = 0
-            for idx in (0, 3):
-                activation_neighbours[2] += dependency_table['picam03'][idx] * activation[idx][0]
-            clientsocket.send(str(activation_neighbours[2][0]).ljust(32))
-            activation[2] = activation_level + activation_neighbours[2][0]
-            percentage[2] = whitepixels
-        elif node == "picam04 ":
-            activation_neighbours[3] = 0
-            for idx in (0, 3):
-                activation_neighbours[3] += dependency_table['picam04'][idx] * activation[idx][0]
-            clientsocket.send(str(activation_neighbours[3][0]).ljust(32))
-            activation[3] = activation_level + activation_neighbours[3][0]
-            percentage[3] = whitepixels
+        node_index = 0
+        if node_name == "picam01 ":
+            node_index = 0
+        elif node_name == "picam02 ":
+            node_index = 1
+        elif node_name == "picam03 ":
+            node_index = 2
+        elif node_name == "picam04 ":
+            node_index = 3
+
+        activation_neighbours[node_index] = 0
+        for idx in xrange(0, 3):
+            activation_neighbours[node_index] += dependency_table[node_name][idx] * activation[idx][0]
+        clientsocket.send(str(activation_neighbours[node_index][0]).ljust(32))
+        activation[node_index] = activation_level + activation_neighbours[0][0]
+        percentage[node_index] = whitepixels
+
         key = cv2.waitKey(1)
         print(np.transpose(activation_neighbours))
+
 
 def update_plot_1():
     global activation, activation_history
@@ -128,7 +118,6 @@ def update_plot_1():
     for idx in range(0, 4):
         activation_history[idx] = np.roll(activation_history[idx], -1)
         activation_history[idx][199] = activation[idx]
-
 
 
 # set default background color to white

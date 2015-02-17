@@ -19,7 +19,7 @@ capture.set(cv.CV_CAP_PROP_FRAME_HEIGHT, 240)
 lock = threading.Lock()
 
 # let the camera adjust the auto parameters (gain etc.) on a few images
-for x in range(0, 15):
+for x in xrange(0, 15):
     ret, frame = capture.read()
 background = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
@@ -34,6 +34,7 @@ sample_time = 0.1               # sample time at startup
 gain = 0.1                      # gain at startup
 flag_senddata = False           # default behavior - do not send the image data
 activation_neighbours = 0       # weighted activity of neighbouring nodes
+
 
 # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
 def lowpass(prev_sample, input_val, sample_time_lowpass):
