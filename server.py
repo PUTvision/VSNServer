@@ -31,7 +31,6 @@ activation_history = np.zeros((4, 200))
 decimg = []
 
 ### connection details ###
-TCP_IP = '192.168.0.100'
 TCP_PORT = 5001
 
 
@@ -51,7 +50,7 @@ def recvall(sock, count):
 def incoming():
     #create socket and listen for incoming client requests
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serversocket.bind((TCP_IP, TCP_PORT))
+    serversocket.bind(('', TCP_PORT))
     serversocket.listen(True)
     print "Server is listening for connections"
     while True:
@@ -78,7 +77,7 @@ def service_clients(clientsocket, clientaddr):
         decimg = cv2.imdecode(data, 1)
         if node == "picam01 ":
             activation_neighbours[0] = 0
-            for idx in (0, 3):
+            for idx in xrange(0, 3):
                 activation_neighbours[0] += dependency_table['picam01'][idx] * activation[idx][0]
             clientsocket.send(str(activation_neighbours[0][0]).ljust(32))
             activation[0] = activation_level + activation_neighbours[0][0]
