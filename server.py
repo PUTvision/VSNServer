@@ -31,7 +31,7 @@ activation_history = np.zeros((4, 200))
 decimg = []
 
 ### connection details ###
-TCP_PORT = 5001
+TCP_PORT = 50001
 
 
 # receives complete compressed image payload
