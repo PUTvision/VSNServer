@@ -1,38 +1,70 @@
 __author__ = 'Amin'
+from twisted.protocols import basic
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import task
 
+import random
 
-class SimpleClient(protocol.Protocol):
+from VSNPacket import VSNPacket
+
+
+class SimpleClient(basic.Int32StringReceiver):
 
     def __init__(self):
         # parameters
         self._private_parameter = 0
         self.periodic_action = []
+        self.packet = VSNPacket()
+
+
+    # callbacks and functions to override
 
     def connectionMade(self):
         print "Connected to server"
-        self.transport.write("Hello server, I am the client!\r\n")
-        self.periodic_action = task.LoopingCall(self.send_message, "asdasd")
+        #self.example_basic_send("Hello server, I am the client!\r\n")
+
+        packed_data = self.packet.pack(
+            random.randint(0, 100),
+            random.randint(0, 100),
+            random.randint(0, 100),
+            random.randint(0, 100)
+        )
+        self.periodic_action = task.LoopingCall(self.send_int32string_msg, packed_data)
+        #self.periodic_action = task.LoopingCall(self.send_int32string_msg, "asidhkqwe mnbn")
         self.periodic_action.start(2.0)
+
+    def connectionLost(self, reason):
+        print "Disconnected from server"
+        self.periodic_action.stop()
+
+    def stringReceived(self, string):
+        print "Received full msg: " + string
 
     def dataReceived(self, data):
         print "Data received: " + data
 
-    def send_message(self, msg):
+    # example and additional functions
+
+    def send_int32string_msg(self, string):
+        print "Sending int32string msg: " + string
+        self.sendString(string)
+
+    def example_basic_send(self, msg):
         self.transport.write("MESSAGE %s\r\n" % msg)
 
 
 class SimpleClientFactory(protocol.ClientFactory):
 
+    protocol = SimpleClient
+    # above line is equal to
+    #def buildProtocol(self, addr):
+    #    p = SimpleClient()
+    #    p.factory = self
+    #    return p
+
     def __init__(self):
         self._common_parameter = 0
-
-    def buildProtocol(self, addr):
-        p = SimpleClient()
-        p.factory = self
-        return p
 
     def clientConnectionLost(self, connector, reason):
         """If we get disconnected, reconnect to server."""
