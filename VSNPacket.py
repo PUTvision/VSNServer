@@ -7,25 +7,23 @@ class VSNPacket:
     def __init__(self):
          # https://docs.python.org/2/library/struct.html
         # !i:
-        # ! = network (= big-endian)
-        # i = int
-        self._struct_format = "! i i i i"
+        # ! => network (= big-endian)
+        # i => int
+        self._struct_format = "! i f f"
         self._prefixLength = struct.calcsize(self._struct_format)
         self._s = struct.Struct(self._struct_format)
 
-        self.channelsValues = [0, 0, 0, 0]
+        self.camera_number = 0
+        self.white_pixels = 0.0
+        self.activation_level = 0.0
 
-    def prepare_to_send(self, values):
-        self.channelsValues[0] = values[0]
-        self.channelsValues[1] = values[1]
-        self.channelsValues[2] = values[2]
-        self.channelsValues[3] = values[3]
+    def set(self, camera_number, white_pixels, activation_level):
+        self.camera_number = camera_number
+        self.white_pixels = white_pixels
+        self.activation_level = activation_level
 
-        self._s.pack(self.channelsValues)
-        #TODO - check it this method is working and prepare another one for unpacking the data
+    def pack_to_send(self):
+        return self._s.pack(self.camera_number, self.white_pixels, self.activation_level)
 
-    def pack(self, *values):
-        return self._s.pack(*values)
-
-    def unpack(self, string):
-        return self._s.unpack(string)
+    def unpack_from_receive(self, string):
+        self.camera_number, self.white_pixels, self.activation_level = self._s.unpack(string)
