@@ -22,6 +22,8 @@ import pyqtgraph as pg
 
 import numpy as np
 
+import cv2
+
 import random
 
 from VSNServer import VSNServerFactory
@@ -187,14 +189,15 @@ class SampleGUIServerWindow(QMainWindow):
         self.server = VSNServerFactory(
                         self.on_client_connection_made,
                         self.on_client_connection_lost,
-                        self.on_client_data_received)
+                        self.on_client_data_received,
+                        self.on_client_image_received
+        )
         self.log('Connecting...')
         # When the connection is made, self.client calls the on_client_connect
         # callback.
         #
         endpoint = TCP4ServerEndpoint(reactor, TCP_PORT)
         endpoint.listen(self.server)
-
 
     def on_doit(self):
         packet_to_client = VSNPacketToClient()
@@ -225,6 +228,15 @@ class SampleGUIServerWindow(QMainWindow):
         activation_level = packet.activation_level
 
         self.service_client(camera_number, white_pixels, activation_level)
+
+    def on_client_image_received(self, image_as_string):
+        data = np.fromstring(image_as_string, dtype='uint8')
+        #decode jpg image to numpy array and display
+        decimg = cv2.imdecode(data, 1)
+
+        myPixmap = QtGui.QPixmap(decimg)
+        myScaledPixmap = myPixmap.scaled(self.label.size(), Qt.KeepAspectRatio)
+        self.label.setPixmap(myScaledPixmap)
 
     def service_client(self, camera_number, white_pixels, activation_level):
         node_index = camera_number

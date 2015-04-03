@@ -1,6 +1,7 @@
 __author__ = 'Amin'
 
 import struct
+from VSNUtility import enum
 
 
 class VSNPacket:
@@ -9,28 +10,44 @@ class VSNPacket:
         # !i:
         # ! => network (= big-endian)
         # i => int
-        self._struct_format = "! i f f"
+        self._struct_format = "! i f f ?"
         self._prefixLength = struct.calcsize(self._struct_format)
         self._s = struct.Struct(self._struct_format)
 
         self.camera_number = 0
         self.white_pixels = 0.0
         self.activation_level = 0.0
+        self.flag_image_next = False
 
-    def set(self, camera_number, white_pixels, activation_level):
+    def set(self, camera_number, white_pixels, activation_level, flag_image_next):
         self.camera_number = camera_number
         self.white_pixels = white_pixels
         self.activation_level = activation_level
+        self.flag_image_next = flag_image_next
 
     def pack_to_send(self):
-        return self._s.pack(self.camera_number, self.white_pixels, self.activation_level)
+        return self._s.pack(
+            self.camera_number,
+            self.white_pixels,
+            self.activation_level,
+            self.flag_image_next
+        )
 
     def unpack_from_receive(self, string):
-        self.camera_number, self.white_pixels, self.activation_level = self._s.unpack(string)
+        self.camera_number, \
+        self.white_pixels, \
+        self.activation_level, \
+        self.flag_image_next \
+            = self._s.unpack(string)
 
 
-def enum(**enums):
-    return type('Enum', (), enums)
+class VSNPacketImage:
+    def __init__(self):
+        self._image = None
+
+    def set(self, image_as_string):
+        self._image = image_as_string
+
 IMAGE_TYPES = enum(foreground='fg', background='bg')
 
 

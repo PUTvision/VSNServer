@@ -10,6 +10,8 @@ from twisted.internet import task
 
 import cv2
 
+import numpy
+
 import socket
 
 
@@ -25,8 +27,17 @@ def ragular_updates():
           str(VSN_activity_controller.sample_time) + \
           "\r\n"
     cv2.waitKey(1)
-    VSN_packet.set(node_number, percentage_of_nonzero_pixels, VSN_activity_controller.activation_level)
+    VSN_packet.set(node_number, percentage_of_nonzero_pixels, VSN_activity_controller.activation_level, True)
     VSN_client_factory.send_packet(VSN_packet)
+
+    # encode image for sending
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+    result, imgencode = cv2.imencode('.jpg', VSN_image_processor._background_image, encode_param)
+    data = numpy.array(imgencode)
+
+    image_as_string = data.tostring()
+
+    VSN_client_factory.send_image(image_as_string)
 
 if __name__ == '__main__':
 

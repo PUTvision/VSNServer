@@ -5,14 +5,17 @@ from twisted.internet import protocol
 
 from VSNPacket import VSNPacket
 
+from VSNUtility import enum
+
+RECEIVE_STATE = enum(packet_standard=1, packet_image=2)
+
 
 class VSNServer(basic.Int32StringReceiver):
 
     def __init__(self):
         # parameters
-        self.name = "picamXX"
-        self.white_pixels = 0.0
-        self.activation_level = 0.0
+        self._private_parameter = None
+        self._receive_state = RECEIVE_STATE.packet_standard
 
     # callbacks and functions to override
 
@@ -23,9 +26,17 @@ class VSNServer(basic.Int32StringReceiver):
         self.factory.client_connection_lost(self)
 
     def stringReceived(self, string):
-        packet = VSNPacket()
-        packet.unpack_from_receive(string)
-        self.factory.client_packet_received(packet)
+        if self._receive_state == RECEIVE_STATE.packet_standard:
+            packet = VSNPacket()
+            packet.unpack_from_receive(string)
+            self.factory.client_packet_received(packet)
+
+            if packet.flag_image_next:
+                self._receive_state == RECEIVE_STATE.packet_image
+
+        else:
+            self.factory.client_image_received(string)
+            self._receive_state == RECEIVE_STATE.packet_standard
 
     # additional functions
 
@@ -42,12 +53,14 @@ class VSNServerFactory(protocol.Factory):
             self,
             client_connection_made_callback,
             client_connection_lost_callback,
-            client_data_received_callback
+            client_data_received_callback,
+            client_image_received_callback
     ):
         self.clients = []
         self.client_connection_made_callback = client_connection_made_callback
         self.client_connection_lost_callback = client_connection_lost_callback
         self.client_packet_received = client_data_received_callback
+        self.client_image_received_callback = client_image_received_callback
 
     def buildProtocol(self, addr):
         p = VSNServer()
@@ -64,6 +77,9 @@ class VSNServerFactory(protocol.Factory):
 
     def client_packet_received(self, packet):
         self.data_received_callback(packet)
+
+    def client_image_received(self, image_as_string):
+        self.client_image_received_callback(image_as_string)
 
     def send_packet_to_all_clients(self, packet):
         for client in self.clients:

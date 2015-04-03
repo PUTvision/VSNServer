@@ -35,6 +35,9 @@ class VSNClient(basic.Int32StringReceiver):
         data_packed_as_string = packet.pack_to_send()
         self.sendString(data_packed_as_string)
 
+    def send_image(self, image_as_string):
+        self.sendString(image_as_string)
+
 
 class VSNClientFactory(protocol.ClientFactory):
 
@@ -53,7 +56,7 @@ class VSNClientFactory(protocol.ClientFactory):
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        print "Connection failed:", + str(reason)
+        print "Connection failed:", reason
         reactor.stop()
 
     def client_connected(self, client):
@@ -68,6 +71,10 @@ class VSNClientFactory(protocol.ClientFactory):
     def send_packet(self, packet):
         if self.client:
             self.client.send_packet(packet)
+
+    def send_image(self, image_as_string):
+        if self.client:
+            self.client.send_image(image_as_string)
 
 
 def send_packet(packet):
