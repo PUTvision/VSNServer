@@ -5,6 +5,7 @@ from twisted.internet import reactor
 from twisted.internet import task
 
 from VSNPacket import VSNPacket
+from VSNPacket import VSNPacketToClient
 
 
 class VSNClient(basic.Int32StringReceiver):
@@ -20,17 +21,19 @@ class VSNClient(basic.Int32StringReceiver):
         self.factory.client_connected(self)
 
     def connectionLost(self, reason):
-        print "Disconnected from server" + reason
+        print "Disconnected from server" + str(reason)
         self.factory.client_disconnected()
 
     def stringReceived(self, string):
-        print "Received full msg: " + string
+        packet = VSNPacketToClient()
+        packet.unpack_from_receive(string)
+        self.factory.client_received_data(packet)
 
     # additional functions
 
     def send_packet(self, packet):
-        packed_data = packet.pack_to_send()
-        self.sendString(packed_data)
+        data_packed_as_string = packet.pack_to_send()
+        self.sendString(data_packed_as_string)
 
 
 class VSNClientFactory(protocol.ClientFactory):
@@ -50,7 +53,7 @@ class VSNClientFactory(protocol.ClientFactory):
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        print "connection failed:", reason
+        print "Connection failed:", + str(reason)
         reactor.stop()
 
     def client_connected(self, client):
@@ -59,13 +62,16 @@ class VSNClientFactory(protocol.ClientFactory):
     def client_disconnected(self):
         self.client = None
 
+    def client_received_data(self, packet):
+        print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
+
     def send_packet(self, packet):
         if self.client:
             self.client.send_packet(packet)
 
 
 def send_packet(packet):
-    VSNClientFactory.send_packet(packet)
+    client_factory.send_packet(packet)
 
 if __name__ == '__main__':
     # constant definitions
@@ -86,5 +92,4 @@ if __name__ == '__main__':
     periodic_action.start(2.0)
     #self.periodic_action.stop()
 
-    # run bot
     reactor.run()

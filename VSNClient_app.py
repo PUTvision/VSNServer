@@ -10,6 +10,8 @@ from twisted.internet import task
 
 import cv2
 
+import socket
+
 
 def ragular_updates():
     percentage_of_nonzero_pixels = VSN_image_processor.do_image_processing()
@@ -23,7 +25,7 @@ def ragular_updates():
           str(VSN_activity_controller.sample_time) + \
           "\r\n"
     cv2.waitKey(1)
-    VSN_packet.set(0, percentage_of_nonzero_pixels, VSN_activity_controller.activation_level)
+    VSN_packet.set(node_number, percentage_of_nonzero_pixels, VSN_activity_controller.activation_level)
     VSN_client_factory.send_packet(VSN_packet)
 
 if __name__ == '__main__':
@@ -33,11 +35,22 @@ if __name__ == '__main__':
     SERVER_IP = '127.0.0.1'
     SERVER_PORT = 50001
 
+    print 'picamXX length: ', len("picamXX")
+
+    node_name = socket.gethostname()
+    node_number = 3
+    if len(node_name) == 7:
+        if node_name[5:6].isdigit():
+            node_number = int(node_name[5:6])
+
+    print node_number
+
     # create factory protocol and application
     VSN_client_factory = VSNClientFactory()
     VSN_image_processor = VSNImageProcessing()
     VSN_activity_controller = VSNActivityController()
     VSN_packet = VSNPacket()
+    VSN_packet.camera_number = node_number
 
     # connect factory to this host and port
     reactor.connectTCP(SERVER_IP, SERVER_PORT, VSN_client_factory)

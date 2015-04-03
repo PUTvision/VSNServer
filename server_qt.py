@@ -1,12 +1,7 @@
 __author__ = 'Amin'
 
-
-from twisted.protocols import basic
-from twisted.internet import protocol
 from twisted.internet.endpoints import TCP4ServerEndpoint
 #from twisted.internet import reactor
-
-from VSNPacket import VSNPacket
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -17,70 +12,21 @@ import time
 import qt4reactor
 
 from pyqtgraph.Qt import QtGui, QtCore
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    _fromUtf8 = lambda s: s
+
 import pyqtgraph as pg
 
 import numpy as np
 
 import random
 
-
-class SimpleServer(basic.Int32StringReceiver):
-
-    def __init__(self, factory):
-        self._factory = factory
-        self._packet = VSNPacket()
-
-        self.white_pixels = 0.0
-        self.activation_level = 0.0
-
-    # callbacks and functions to override
-
-    def connectionMade(self):
-        self._factory.client_connection_made(self)
-
-    def connectionLost(self, reason):
-        self._factory.client_connection_lost(self)
-
-    def stringReceived(self, string):
-        values = self._packet.receive_data(string)
-        self._factory.data_received(values)
-
-    def send_data(self, values):
-        string_to_send = self._packet.prepare_to_send(values)
-        self.sendString(string_to_send)
-
-
-class SimpleServerFactory(protocol.Factory):
-
-    def __init__(
-            self,
-            client_connection_made_callback,
-            client_connection_lost_callback,
-            data_received_callback
-    ):
-        self.clients = []
-        self.client_connection_made_callback = client_connection_made_callback
-        self.client_connection_lost_callback = client_connection_lost_callback
-        self.data_received_callback = data_received_callback
-
-    def buildProtocol(self, addr):
-        p = SimpleServer(self)
-        return p
-
-    def client_connection_made(self, client):
-        self.clients.append(client)
-        self.client_connection_made_callback()
-
-    def client_connection_lost(self, client):
-        self.clients.remove(client)
-        self.client_connection_lost_callback()
-
-    def data_received(self, data):
-        self.data_received_callback(data)
-
-    def send_data(self, data):
-        for client in self.clients:
-            client.send_data(data)
+from VSNServer import VSNServerFactory
+from VSNPacket import VSNPacketToClient
+from VSNPacket import IMAGE_TYPES
 
 
 class CircleWidget(QWidget):
@@ -130,6 +76,36 @@ dependency_table = {'picam01': [0.0, 0.5, 0.5, 0.5],
                     'picam04': [0.5, 0.5, 0.5, 0.0]
                     }
 
+
+class CameraGraph:
+    def __init__(self, camera_number):
+        self.plot_title = "picam" + str(camera_number)
+
+        self.white_pixels_percentage = np.zeros(1)
+        self.neighbouring_node_activation_level = 0.0
+        self.activation_level_history = np.zeros(200)
+
+        # graph elements
+        self._curve = None
+        self._bar = None
+
+    def add_graph(self, window):
+        #setup plot
+        cam_plot = window.addPlot(title=self.plot_title)
+        self._curve = cam_plot.plot(pen='r')
+        self._bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
+        cam_plot.addItem(self._bar)
+        #set the scale of the plot
+        cam_plot.setYRange(0, 100)
+
+    def update_graph(self, activation_level):
+        self._bar.setData([0, 20], self.white_pixels_percentage)
+        self._curve.setData(self.activation_level_history)
+
+        self.activation_level_history = np.roll(self.activation_level_history, -1)
+        self.activation_level_history[199] = activation_level
+
+
 class SampleGUIServerWindow(QMainWindow):
     def __init__(self, reactor, parent=None):
         super(SampleGUIServerWindow, self).__init__(parent)
@@ -138,7 +114,6 @@ class SampleGUIServerWindow(QMainWindow):
         self.create_main_frame()
         self.create_server()
         self.create_timer()
-        self.win = self.create_graphs_window()
 
         # ## global variables ###
         # white pixel percentage
@@ -147,8 +122,10 @@ class SampleGUIServerWindow(QMainWindow):
         self._activation = np.zeros((4, 1))
         # current neighbouring nodes activation level
         self._activation_neighbours = np.zeros((4, 1))
-        # activation level history
-        self._activation_history = np.zeros((4, 200))
+
+        self._graphs = [CameraGraph(i) for i in xrange(4)]
+
+        self.win = self.create_graphs_window()
 
     def create_graphs_window(self):
         # set default background color to white
@@ -158,65 +135,23 @@ class SampleGUIServerWindow(QMainWindow):
         win.resize(1400, 800)
         win.setWindowTitle('VSN activity monitor')
 
-        #setup plot 1
-        cam_plot_1 = win.addPlot(title="picam01")
-        self._curve_1 = cam_plot_1.plot(pen='r')
-        self._bar_1 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot_1.addItem(self._bar_1)
-        #set the scale of the plot
-        cam_plot_1.setYRange(0, 100)
+        for i, graph in enumerate(self._graphs):
+            if i > 0 and i % 2 == 0:
+                win.nextRow()
+            graph.add_graph(win)
 
-        #setup plot 2
-        cam_plot_2 = win.addPlot(title="picam02")
-        self._curve_2 = cam_plot_2.plot(pen='r')
-        self._bar_2 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot_2.addItem(self._bar_2)
-        #set the scale of the plot
-        cam_plot_2.setYRange(0, 100)
-
-        #next row
-        win.nextRow()
-
-        #setup plot 3
-        cam_plot_3 = win.addPlot(title="picam03")
-        self._curve_3 = cam_plot_3.plot(pen='r')
-        self._bar_3 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot_3.addItem(self._bar_3)
-        #set the scale of the plot
-        cam_plot_3.setYRange(0, 100)
-
-        #setup plot 3
-        cam_plot_4 = win.addPlot(title="picam04")
-        self._curve_4 = cam_plot_4.plot(pen='r')
-        self._bar_4 = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot_4.addItem(self._bar_4)
-        #set the scale of the plot
-        cam_plot_4.setYRange(0, 100)
-
-        timer_plot_1 = QtCore.QTimer(self)
-        timer_plot_1.timeout.connect(self.update_plot_1)
-        timer_plot_1.start(200)
+        timer_plot = QtCore.QTimer(self)
+        timer_plot.timeout.connect(self.update_plot)
+        timer_plot.start(200)
 
         return win
 
-    def update_plot_1(self):
+    def update_plot(self):
+        for i, graph in enumerate(self._graphs):
+            if i < 4:
+                graph.white_pixels_percentage = self._percentage[i]
+                graph.update_graph(self._activation[i])
 
-        self._curve_1.setData(self._activation_history[0])
-        self._bar_1.setData([0, 20], self._percentage[0])
-
-        self._curve_2.setData(self._activation_history[1])
-        self._bar_2.setData([0, 20], self._percentage[1])
-
-        self._curve_3.setData(self._activation_history[2])
-        self._bar_3.setData([0, 20], self._percentage[2])
-
-        self._curve_4.setData(self._activation_history[3])
-        self._bar_4.setData([0, 20], self._percentage[3])
-
-        for idx in range(0, 4):
-            self._activation_history[idx] = np.roll(self._activation_history[idx], -1)
-            self._activation_history[idx][199] = self._activation[idx]
-            #self._activation_history[idx][199] = random.randint(1, 100)
 
     def create_main_frame(self):
         self.circle_widget = CircleWidget()
@@ -224,13 +159,22 @@ class SampleGUIServerWindow(QMainWindow):
         self.doit_button.clicked.connect(self.on_doit)
         self.log_widget = LogWidget()
 
+        self.label = QtGui.QLabel()
+
+        myPixmap = QtGui.QPixmap(_fromUtf8('Crazy-Cat.jpg'))
+        myScaledPixmap = myPixmap.scaled(self.label.size(), Qt.KeepAspectRatio)
+        self.label.setPixmap(myScaledPixmap)
+
         hbox = QHBoxLayout()
         hbox.addWidget(self.circle_widget)
         hbox.addWidget(self.doit_button)
         hbox.addWidget(self.log_widget)
+        hbox.addWidget(self.label)
 
         main_frame = QWidget()
         main_frame.setLayout(hbox)
+
+
 
         self.setCentralWidget(main_frame)
 
@@ -240,18 +184,29 @@ class SampleGUIServerWindow(QMainWindow):
         self.circle_timer.start(25)
 
     def create_server(self):
-        self.server = SimpleServerFactory(
+        self.server = VSNServerFactory(
                         self.on_client_connection_made,
                         self.on_client_connection_lost,
-                        self.on_client_receive)
-
-    def on_doit(self):
+                        self.on_client_data_received)
         self.log('Connecting...')
         # When the connection is made, self.client calls the on_client_connect
         # callback.
         #
         endpoint = TCP4ServerEndpoint(reactor, TCP_PORT)
         endpoint.listen(self.server)
+
+
+    def on_doit(self):
+        packet_to_client = VSNPacketToClient()
+        packet_to_client.set(4.5, IMAGE_TYPES.background, False)
+        self.server.send_packet_to_all_clients(packet_to_client)
+
+        # test for adding new row to the graph window
+        new_camera_graph = CameraGraph(5)
+        if len(self._graphs) % 2 == 0:
+            self.win.nextRow()
+        new_camera_graph.add_graph(self.win)
+        self._graphs.append(new_camera_graph)
 
     def on_client_connection_made(self):
         self.log('Connected to server. Sending...')
@@ -261,16 +216,27 @@ class SampleGUIServerWindow(QMainWindow):
         # reason is a twisted.python.failure.Failure  object
         self.log('Connection failed')
 
-    def on_client_receive(self, msg):
+    def on_client_data_received(self, packet):
         #self.log('Client reply: %s' % msg)
         self.log('Received data')
 
-        camera_number, white_pixels, activation_level = msg
+        camera_number = packet.camera_number
+        white_pixels = packet.white_pixels
+        activation_level = packet.activation_level
 
-        self._activation[0] = activation_level
-        #
-        # for i, data_item in enumerate(msg):
-        #     self._activation[i] = data_item
+        self.service_client(camera_number, white_pixels, activation_level)
+
+    def service_client(self, camera_number, white_pixels, activation_level):
+        node_index = camera_number
+        node_name = "picam" + str(node_index).zfill(2)
+
+        self._activation_neighbours[node_index] = 0
+        for idx in xrange(0, 3):
+            self._activation_neighbours[node_index] += dependency_table[node_name][idx] * self._activation[idx][0]
+        # still TODO (the line below)
+        #clientsocket.send(str(activation_neighbours[node_index][0]).ljust(32))
+        self._activation[node_index] = activation_level + self._activation_neighbours[0][0]
+        self._percentage[node_index] = white_pixels
 
     def log(self, msg):
         timestamp = '[%010.3f]' % time.clock()
