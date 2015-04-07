@@ -207,22 +207,19 @@ class SampleGUIServerWindow(QMainWindow):
 
         self._activation_neighbours[node_index] = 0
         for idx in xrange(0, 3):
-            # TODO - why activations is indexed twice??? Is it correct?
             self._activation_neighbours[node_index] += \
-                dependency_table[node_name][idx] * self._graphsController._activations[idx][0]
-        # TODO - activation_neighbours is indexed twice?
+                dependency_table[node_name][idx] * self._graphsController._activations[idx]
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
-            self._activation_neighbours[node_index][0],
+            self._activation_neighbours[node_index],
             IMAGE_TYPES.background,
             False
         )
         client.send_packet(packet_to_send)
 
-        # TODO - why activation_neighbours is indexed twice?
         self._graphsController.set_new_values(
             node_index,
-            activation_level + self._activation_neighbours[node_index][0],
+            activation_level + self._activation_neighbours[node_index],
             white_pixels
         )
 
