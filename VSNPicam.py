@@ -49,6 +49,7 @@ class VSNPicam:
         print "Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name
 
     def _do_regular_update(self):
+        # queue the next call to itself
         reactor.callLater(self._activity_controller.sample_time, self._do_regular_update)
 
         percentage_of_nonzero_pixels = self._image_processor.do_image_processing()
@@ -81,7 +82,7 @@ class VSNPicam:
     def _packet_received_callback(self, packet):
         self._activity_controller.set_params(packet.activation_neighbours)
         self._flag_send_image = packet.flag_send_image
-        # TODO: add add filed for storing which image should be sent
+        # TODO: add a field for storing which image should be sent
 
     def start(self, server_ip="127.0.0.1", server_port=50001):
         # connect factory to this host and port
