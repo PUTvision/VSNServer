@@ -29,7 +29,7 @@ class VSNServer(basic.Int32StringReceiver):
         if self._receive_state == RECEIVE_STATE.packet_standard:
             packet = VSNPacket()
             packet.unpack_from_receive(string)
-            self.factory.client_packet_received(packet)
+            self.factory.client_packet_received(packet, self)
 
             if packet.flag_image_next:
                 self._receive_state = RECEIVE_STATE.packet_image
@@ -75,8 +75,8 @@ class VSNServerFactory(protocol.Factory):
         self.clients.remove(client)
         self.client_connection_lost_callback()
 
-    def client_packet_received(self, packet):
-        self.data_received_callback(packet)
+    def client_packet_received(self, packet, client):
+        self.data_received_callback(packet, client)
 
     def client_image_received(self, image_as_string):
         self.client_image_received_callback(image_as_string)

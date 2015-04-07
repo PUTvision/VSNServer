@@ -18,17 +18,14 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
-import pyqtgraph as pg
-
 import numpy as np
 
 import cv2
 
-import random
-
 from VSNServer import VSNServerFactory
 from VSNPacket import VSNPacketToClient
 from VSNPacket import IMAGE_TYPES
+from VSNGraph import VSNGraphController
 
 
 class CircleWidget(QWidget):
@@ -79,35 +76,6 @@ dependency_table = {'picam01': [0.0, 0.5, 0.5, 0.5],
                     }
 
 
-class CameraGraph:
-    def __init__(self, camera_number):
-        self.plot_title = "picam" + str(camera_number)
-
-        self.white_pixels_percentage = np.zeros(1)
-        self.neighbouring_node_activation_level = 0.0
-        self.activation_level_history = np.zeros(200)
-
-        # graph elements
-        self._curve = None
-        self._bar = None
-
-    def add_graph(self, window):
-        #setup plot
-        cam_plot = window.addPlot(title=self.plot_title)
-        self._curve = cam_plot.plot(pen='r')
-        self._bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot.addItem(self._bar)
-        #set the scale of the plot
-        cam_plot.setYRange(0, 100)
-
-    def update_graph(self, activation_level):
-        self._bar.setData([0, 20], self.white_pixels_percentage)
-        self._curve.setData(self.activation_level_history)
-
-        self.activation_level_history = np.roll(self.activation_level_history, -1)
-        self.activation_level_history[199] = activation_level
-
-
 class SampleGUIServerWindow(QMainWindow):
     def __init__(self, reactor, parent=None):
         super(SampleGUIServerWindow, self).__init__(parent)
@@ -118,42 +86,33 @@ class SampleGUIServerWindow(QMainWindow):
         self.create_timer()
 
         # ## global variables ###
-        # white pixel percentage
-        self._percentage = np.zeros((4, 1))
-        # current activation level
-        self._activation = np.zeros((4, 1))
         # current neighbouring nodes activation level
         self._activation_neighbours = np.zeros((4, 1))
 
-        self._graphs = [CameraGraph(i) for i in xrange(4)]
+        #self._graphs = [VSNGraph(i) for i in xrange(4)]
 
-        self.win = self.create_graphs_window()
-
-    def create_graphs_window(self):
-        # set default background color to white
-        pg.setConfigOption('background', 'w')
-        # open the plot window, set properties
-        win = pg.GraphicsWindow(title="VSN activity monitor")
-        win.resize(1400, 800)
-        win.setWindowTitle('VSN activity monitor')
-
-        for i, graph in enumerate(self._graphs):
-            if i > 0 and i % 2 == 0:
-                win.nextRow()
-            graph.add_graph(win)
+        self._graphsController = VSNGraphController()
+        self._graphsController.create_graph_window()
+        self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
 
         timer_plot = QtCore.QTimer(self)
-        timer_plot.timeout.connect(self.update_plot)
+        timer_plot.timeout.connect(self._graphsController.update_graphs)
         timer_plot.start(200)
 
-        return win
-
-    def update_plot(self):
-        for i, graph in enumerate(self._graphs):
-            if i < 4:
-                graph.white_pixels_percentage = self._percentage[i]
-                graph.update_graph(self._activation[i])
-
+        self.log(
+            "self._graphsController._activations: " +
+            str(self._graphsController._activations) +
+            "\r\n"
+            "self._graphsController._activations[0][0]: " +
+            str(self._graphsController._activations[0][0]) +
+            "\r\n" +
+            "self._graphsController._activations[0]: " +
+            str(self._graphsController._activations[0]) +
+            "\r\n"
+        )
 
     def create_main_frame(self):
         self.circle_widget = CircleWidget()
@@ -175,8 +134,6 @@ class SampleGUIServerWindow(QMainWindow):
 
         main_frame = QWidget()
         main_frame.setLayout(hbox)
-
-
 
         self.setCentralWidget(main_frame)
 
@@ -205,11 +162,7 @@ class SampleGUIServerWindow(QMainWindow):
         self.server.send_packet_to_all_clients(packet_to_client)
 
         # test for adding new row to the graph window
-        new_camera_graph = CameraGraph(5)
-        if len(self._graphs) % 2 == 0:
-            self.win.nextRow()
-        new_camera_graph.add_graph(self.win)
-        self._graphs.append(new_camera_graph)
+        self._graphsController.add_new_graph()
 
     def on_client_connection_made(self):
         self.log('Connected to server. Sending...')
@@ -219,7 +172,7 @@ class SampleGUIServerWindow(QMainWindow):
         # reason is a twisted.python.failure.Failure  object
         self.log('Connection failed')
 
-    def on_client_data_received(self, packet):
+    def on_client_data_received(self, packet, client):
         #self.log('Client reply: %s' % msg)
         self.log('Received data')
 
@@ -227,7 +180,7 @@ class SampleGUIServerWindow(QMainWindow):
         white_pixels = packet.white_pixels
         activation_level = packet.activation_level
 
-        self.service_client(camera_number, white_pixels, activation_level)
+        self.service_client(camera_number, white_pixels, activation_level, client)
 
     def on_client_image_received(self, image_as_string):
         data = np.fromstring(image_as_string, dtype='uint8')
@@ -237,18 +190,32 @@ class SampleGUIServerWindow(QMainWindow):
         qi = QtGui.QImage(decimg, 320, 240, QtGui.QImage.Format_Indexed8)
         self.label.setPixmap(QtGui.QPixmap.fromImage(qi))
 
-
-    def service_client(self, camera_number, white_pixels, activation_level):
+    def service_client(self, camera_number, white_pixels, activation_level, client):
         node_index = camera_number
         node_name = "picam" + str(node_index).zfill(2)
 
         self._activation_neighbours[node_index] = 0
         for idx in xrange(0, 3):
-            self._activation_neighbours[node_index] += dependency_table[node_name][idx] * self._activation[idx][0]
+            # TODO - why activations is indexed twice??? Is it correct?
+            self._activation_neighbours[node_index] += \
+                dependency_table[node_name][idx] * self._graphsController._activations[idx][0]
         # still TODO (the line below)
+        # TODO - activation_neighbours is indexed twice?
         #clientsocket.send(str(activation_neighbours[node_index][0]).ljust(32))
-        self._activation[node_index] = activation_level + self._activation_neighbours[0][0]
-        self._percentage[node_index] = white_pixels
+        packet_to_send = VSNPacketToClient()
+        packet_to_send.set(
+            self._activation_neighbours[node_index][0],
+            IMAGE_TYPES.background,
+            False
+        )
+        client.send_packet(packet_to_send)
+
+        # TODO - why activation_neighbours is indexed twice?
+        self._graphsController.set_new_values(
+            node_index,
+            activation_level + self._activation_neighbours[node_index][0],
+            white_pixels
+        )
 
     def log(self, msg):
         timestamp = '[%010.3f]' % time.clock()

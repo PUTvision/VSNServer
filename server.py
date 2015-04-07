@@ -89,7 +89,7 @@ def service_clients(clientsocket, clientaddr):
         for idx in xrange(0, 3):
             activation_neighbours[node_index] += dependency_table[node_name][idx] * activation[idx][0]
         clientsocket.send(str(activation_neighbours[node_index][0]).ljust(32))
-        activation[node_index] = activation_level + activation_neighbours[0][0]
+        activation[node_index] = activation_level + activation_neighbours[node_index][0]
         percentage[node_index] = whitepixels
 
         key = cv2.waitKey(1)

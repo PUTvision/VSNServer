@@ -27,7 +27,12 @@ def ragular_updates():
           str(VSN_activity_controller.sample_time) + \
           "\r\n"
     cv2.waitKey(1)
-    VSN_packet.set(node_number, percentage_of_nonzero_pixels, VSN_activity_controller.activation_level, True)
+    VSN_packet.set(
+        node_number,
+        percentage_of_nonzero_pixels,
+        VSN_activity_controller.activation_level,
+        False
+    )
     VSN_client_factory.send_packet(VSN_packet)
 
     # encode image for sending
@@ -37,7 +42,7 @@ def ragular_updates():
 
     image_as_string = data.tostring()
 
-    VSN_client_factory.send_image(image_as_string)
+    #VSN_client_factory.send_image(image_as_string)
 
 if __name__ == '__main__':
 
