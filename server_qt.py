@@ -1,15 +1,12 @@
 __author__ = 'Amin'
 
 from twisted.internet.endpoints import TCP4ServerEndpoint
-#from twisted.internet import reactor
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import sys
 import time
-
-import qt4reactor
 
 from pyqtgraph.Qt import QtGui, QtCore
 
@@ -75,6 +72,11 @@ dependency_table = {'picam01': [0.0, 0.5, 0.5, 0.5],
                     'picam04': [0.5, 0.5, 0.5, 0.0]
                     }
 
+# TODO:
+# gather data about state of each camera - how long it was in low-power and how long in high power
+# ability to change gain and sample time on the fly
+# server controller - separate class
+# ability to choose (from GUI) if image should be send or not)
 
 class SampleGUIServerWindow(QMainWindow):
     def __init__(self, reactor, parent=None):
@@ -101,18 +103,6 @@ class SampleGUIServerWindow(QMainWindow):
         timer_plot = QtCore.QTimer(self)
         timer_plot.timeout.connect(self._graphsController.update_graphs)
         timer_plot.start(200)
-
-        self.log(
-            "self._graphsController._activations: " +
-            str(self._graphsController._activations) +
-            "\r\n"
-            "self._graphsController._activations[0][0]: " +
-            str(self._graphsController._activations[0][0]) +
-            "\r\n" +
-            "self._graphsController._activations[0]: " +
-            str(self._graphsController._activations[0]) +
-            "\r\n"
-        )
 
     def create_main_frame(self):
         self.circle_widget = CircleWidget()
@@ -208,7 +198,8 @@ class SampleGUIServerWindow(QMainWindow):
         self._activation_neighbours[node_index] = 0
         for idx in xrange(0, 3):
             self._activation_neighbours[node_index] += \
-                dependency_table[node_name][idx] * self._graphsController._activations[idx]
+                dependency_table[node_name][idx] * self._graphsController._percentages[idx]
+                #dependency_table[node_name][idx] * self._graphsController._activations[idx]
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
             self._activation_neighbours[node_index],
@@ -250,11 +241,11 @@ TCP_PORT = 50001
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # try:
-    #     import qt4reactor
-    # except ImportError:
-    #     # Maybe qt4reactor is placed inside twisted.internet in site-packages?
-    #     from twisted.internet import qt4reactor
+    try:
+        import qt4reactor
+    except ImportError:
+        # Maybe qt4reactor is placed inside twisted.internet in site-packages?
+        from twisted.internet import qt4reactor
     qt4reactor.install()
 
     from twisted.internet import reactor

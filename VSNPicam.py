@@ -94,5 +94,4 @@ class VSNPicam:
 
 if __name__ == '__main__':
     picam = VSNPicam("picam01", 0)
-
     picam.start()

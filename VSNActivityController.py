@@ -9,7 +9,7 @@ class VSNActivityController:
         self.filename = "log.csv"            # log file name - if logging is enabled
         self.activation_level = 0.0          # default starting activation level
         self.sample_time = 1.0               # sample time at startup
-        self.gain = 0.1                      # gain at startup
+        self.gain = 2.0                      # gain at startup
         self.activation_neighbours = 0.0     # weighted activity of neighbouring nodes
 
     # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
@@ -35,7 +35,7 @@ class VSNActivityController:
         # update sampling time and gain based on current activity level
         if self.activation_level < 10:
             self.sample_time = 1
-            self.gain = 0.1
+            self.gain = 2.0
         else:
             self.sample_time = 0.1
             self.gain = 0.1
