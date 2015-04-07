@@ -201,20 +201,19 @@ class SampleGUIServerWindow(QMainWindow):
         self.label.setPixmap(QtGui.QPixmap.fromImage(qi))
 
     def service_client(self, camera_number, white_pixels, activation_level, client):
-        node_index = camera_number
-        node_name = "picam" + str(node_index).zfill(2)
+        # TODO - this should be corrected
+        node_index = camera_number-1
+        node_name = "picam" + str(camera_number).zfill(2)
 
         self._activation_neighbours[node_index] = 0
         for idx in xrange(0, 3):
             # TODO - why activations is indexed twice??? Is it correct?
             self._activation_neighbours[node_index] += \
-                dependency_table[node_name][idx] * self._graphsController._activations[idx]
-        # still TODO (the line below)
+                dependency_table[node_name][idx] * self._graphsController._activations[idx][0]
         # TODO - activation_neighbours is indexed twice?
-        #clientsocket.send(str(activation_neighbours[node_index][0]).ljust(32))
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
-            self._activation_neighbours[node_index],
+            self._activation_neighbours[node_index][0],
             IMAGE_TYPES.background,
             False
         )
@@ -223,7 +222,7 @@ class SampleGUIServerWindow(QMainWindow):
         # TODO - why activation_neighbours is indexed twice?
         self._graphsController.set_new_values(
             node_index,
-            activation_level + self._activation_neighbours[node_index],
+            activation_level + self._activation_neighbours[node_index][0],
             white_pixels
         )
 
@@ -232,10 +231,8 @@ class SampleGUIServerWindow(QMainWindow):
                "{:.2f}".format(white_pixels) + ", " + \
                ""
         if node_index == 0:
-            self._label_picam1.setText("camera 0")
-        elif node_index == 1:
             self._label_picam1.setText(info)
-        elif node_index == 2:
+        elif node_index == 1:
             self._label_picam2.setText(info)
 
         activations_neighbours_text = str(self._activation_neighbours)

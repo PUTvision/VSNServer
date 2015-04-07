@@ -67,7 +67,6 @@ class VSNClientFactory(protocol.ClientFactory):
         self.client = None
 
     def client_received_data(self, packet):
-        print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
         self._packet_received_callback(packet)
 
     def send_packet(self, packet):

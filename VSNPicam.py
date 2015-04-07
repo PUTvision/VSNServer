@@ -80,6 +80,7 @@ class VSNPicam:
             self._client_factory.send_image(image_as_string)
 
     def _packet_received_callback(self, packet):
+        print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
         self._activity_controller.set_params(packet.activation_neighbours)
         self._flag_send_image = packet.flag_send_image
         # TODO: add a field for storing which image should be sent
