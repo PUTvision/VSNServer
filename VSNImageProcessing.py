@@ -15,9 +15,9 @@ class VSNImageProcessing:
         self._background_image = None
         self._foreground_image = None
 
-        self.init_camera()
+        self._init_camera()
 
-    def init_camera(self):
+    def _init_camera(self):
         self._capture = cv2.VideoCapture(self._video_capture_number)
         self._capture.set(cv.CV_CAP_PROP_FRAME_WIDTH, 320)
         self._capture.set(cv.CV_CAP_PROP_FRAME_HEIGHT, 240)
@@ -37,7 +37,6 @@ class VSNImageProcessing:
     def do_image_processing(self):
         # grab and process frame, update the background and foreground model
         ret, frame = self._capture.read()
-
         # process the frame
         self._foreground_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # calculate the difference between current and background frame
@@ -64,49 +63,7 @@ class VSNImageProcessing:
 
         return percentage_of_nonzero_pixels
 
-import math
-
-
-class VSNActivityController:
-
-    def __init__(self):
-        self.filename = "log.csv"            # log file name - if logging is enabled
-        self.activation_level = 0.0          # default starting activation level
-        self.sample_time = 1.0               # sample time at startup
-        self.gain = 2.0                      # gain at startup
-        self.activation_neighbours = 0.0     # weighted activity of neighbouring nodes
-
-    # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
-    def lowpass(self, prev_sample, current_sample, sample_time):
-        time_constant = 1
-        output = \
-            (self.gain / time_constant) * current_sample + \
-            prev_sample * pow(math.e, -1.0 * (sample_time / time_constant))
-        return output
-
-    def set_params(self, activation_neighbours):
-        self.activation_neighbours = activation_neighbours
-
-    def update_sensor_state_based_on_captured_image(self, percentage_of_nonzero_pixels):
-        # compute the sensor state based on captured images
-        activation_level_new = self.lowpass(
-            self.activation_level,
-            percentage_of_nonzero_pixels,
-            self.sample_time
-        )
-        self.activation_level = activation_level_new + self.activation_neighbours
-
-        # update sampling time and gain based on current activity level
-        if self.activation_level < 10:
-            self.sample_time = 1
-            self.gain = 2
-        else:
-            self.sample_time = 0.1
-            self.gain = 0.1
-
-    def prepare_data_to_send(self):
-        #TODO: implement function that gathers all the data (also choosen image) and packs it for sending
-        print "Not implemented yet"
+from VSNActivityController import VSNActivityController
 
 
 if __name__ == "__main__":
@@ -116,7 +73,7 @@ if __name__ == "__main__":
     while True:
 
         # main loop
-        key = cv2.waitKey(50)
+        key = cv2.waitKey(int(VSN_activity_controller.sample_time*1000.0))
         if key == 27:  # exit on ESC
             break
         percentage_of_nonzero_pixels_ = VSN_image_processor.do_image_processing()
