@@ -232,11 +232,11 @@ class SampleGUIServerWindow(QMainWindow):
     def on_client_image_received(self, image_as_string):
         data = np.fromstring(image_as_string, dtype='uint8')
         #decode jpg image to numpy array and display
-        decimg = cv2.imdecode(data, 1)
+        decimg = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
 
-        myPixmap = QtGui.QPixmap(decimg)
-        myScaledPixmap = myPixmap.scaled(self.label.size(), Qt.KeepAspectRatio)
-        self.label.setPixmap(myScaledPixmap)
+        qi = QtGui.QImage(decimg, 320, 240, QtGui.QImage.Format_Indexed8)
+        self.label.setPixmap(QtGui.QPixmap.fromImage(qi))
+
 
     def service_client(self, camera_number, white_pixels, activation_level):
         node_index = camera_number

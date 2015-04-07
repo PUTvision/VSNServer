@@ -32,11 +32,11 @@ class VSNServer(basic.Int32StringReceiver):
             self.factory.client_packet_received(packet)
 
             if packet.flag_image_next:
-                self._receive_state == RECEIVE_STATE.packet_image
+                self._receive_state = RECEIVE_STATE.packet_image
 
         else:
             self.factory.client_image_received(string)
-            self._receive_state == RECEIVE_STATE.packet_standard
+            self._receive_state = RECEIVE_STATE.packet_standard
 
     # additional functions
 

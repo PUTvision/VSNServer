@@ -4,6 +4,12 @@ import struct
 from VSNUtility import enum
 
 
+# Definitions of DTOs - Data Transfer Objects used for moving data
+# from the network stream to higher level of processing
+
+# TODO: convert this classes to simple struct like objects
+# and offer methods that invoke appropriate action based on the data provieded (Clean Codechapter 6)
+
 class VSNPacket:
     def __init__(self):
         # https://docs.python.org/2/library/struct.html
