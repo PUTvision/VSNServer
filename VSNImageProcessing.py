@@ -6,7 +6,9 @@ import cv2.cv as cv
 
 class VSNImageProcessing:
 
-    def __init__(self):
+    def __init__(self, video_capture_number=0):
+
+        self._video_capture_number = video_capture_number
 
         self._capture = None
         self._struct = None
@@ -16,7 +18,7 @@ class VSNImageProcessing:
         self.init_camera()
 
     def init_camera(self):
-        self._capture = cv2.VideoCapture(0)
+        self._capture = cv2.VideoCapture(self._video_capture_number)
         self._capture.set(cv.CV_CAP_PROP_FRAME_WIDTH, 320)
         self._capture.set(cv.CV_CAP_PROP_FRAME_HEIGHT, 240)
 
@@ -69,11 +71,10 @@ class VSNActivityController:
 
     def __init__(self):
         self.filename = "log.csv"            # log file name - if logging is enabled
-        self.activation_level = 0            # default starting activation level
-        self.sample_time = 0.1               # sample time at startup
-        self.gain = 0.1                      # gain at startup
-        self.flag_senddata = False           # default behavior - do not send the image data
-        self.activation_neighbours = 0       # weighted activity of neighbouring nodes
+        self.activation_level = 0.0          # default starting activation level
+        self.sample_time = 1.0               # sample time at startup
+        self.gain = 2.0                      # gain at startup
+        self.activation_neighbours = 0.0     # weighted activity of neighbouring nodes
 
     # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
     def lowpass(self, prev_sample, current_sample, sample_time):
@@ -118,8 +119,8 @@ if __name__ == "__main__":
         key = cv2.waitKey(50)
         if key == 27:  # exit on ESC
             break
-        percentage_of_nonzero_pixels = VSN_image_processor.do_image_processing()
-        VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_nonzero_pixels)
+        percentage_of_nonzero_pixels_ = VSN_image_processor.do_image_processing()
+        VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_nonzero_pixels_)
         cv2.imshow('fg', VSN_image_processor._background_image)
         print "Params: " + \
               str(VSN_activity_controller.activation_level) + \

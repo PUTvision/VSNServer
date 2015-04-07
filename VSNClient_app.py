@@ -12,13 +12,13 @@ import cv2
 
 import numpy
 
-import socket
-
 
 def ragular_updates():
     percentage_of_nonzero_pixels = VSN_image_processor.do_image_processing()
     VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_nonzero_pixels)
+
     cv2.imshow('fg', VSN_image_processor._background_image)
+    cv2.waitKey(1)
     print "Params: " + \
           str(VSN_activity_controller.activation_level) + \
           ", " + \
@@ -26,12 +26,12 @@ def ragular_updates():
           ", " +\
           str(VSN_activity_controller.sample_time) + \
           "\r\n"
-    cv2.waitKey(1)
+
     VSN_packet.set(
         node_number,
         percentage_of_nonzero_pixels,
         VSN_activity_controller.activation_level,
-        False
+        True
     )
     VSN_client_factory.send_packet(VSN_packet)
 
@@ -42,24 +42,17 @@ def ragular_updates():
 
     image_as_string = data.tostring()
 
-    #VSN_client_factory.send_image(image_as_string)
+    VSN_client_factory.send_image(image_as_string)
 
 if __name__ == '__main__':
 
     # constant definitions
-    #SERVER_IP = '192.168.0.100'
+    #SERVER_IP = '192.168.0.10'
     SERVER_IP = '127.0.0.1'
     SERVER_PORT = 50001
 
-    print 'picamXX length: ', len("picamXX")
-
-    node_name = socket.gethostname()
     node_number = 3
-    if len(node_name) == 7:
-        if node_name[5:6].isdigit():
-            node_number = int(node_name[5:6])
-
-    print node_number
+    print "Node number: ", node_number
 
     # create factory protocol and application
     VSN_client_factory = VSNClientFactory()

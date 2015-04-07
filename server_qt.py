@@ -126,14 +126,24 @@ class SampleGUIServerWindow(QMainWindow):
         myScaledPixmap = myPixmap.scaled(self.label.size(), Qt.KeepAspectRatio)
         self.label.setPixmap(myScaledPixmap)
 
+        self._label_picam1 = QtGui.QLabel("Picam01")
+        self._label_picam2 = QtGui.QLabel("Picam02")
+        self._label_activations_neighbours = QtGui.QLabel("activations_neighbours")
+
         hbox = QHBoxLayout()
-        hbox.addWidget(self.circle_widget)
-        hbox.addWidget(self.doit_button)
         hbox.addWidget(self.log_widget)
         hbox.addWidget(self.label)
 
+        vbox = QtGui.QVBoxLayout()
+        vbox.addLayout(hbox)
+        vbox.addWidget(self.circle_widget)
+        vbox.addWidget(self.doit_button)
+        vbox.addWidget(self._label_picam1)
+        vbox.addWidget(self._label_picam2)
+        vbox.addWidget(self._label_activations_neighbours)
+
         main_frame = QWidget()
-        main_frame.setLayout(hbox)
+        main_frame.setLayout(vbox)
 
         self.setCentralWidget(main_frame)
 
@@ -198,13 +208,13 @@ class SampleGUIServerWindow(QMainWindow):
         for idx in xrange(0, 3):
             # TODO - why activations is indexed twice??? Is it correct?
             self._activation_neighbours[node_index] += \
-                dependency_table[node_name][idx] * self._graphsController._activations[idx][0]
+                dependency_table[node_name][idx] * self._graphsController._activations[idx]
         # still TODO (the line below)
         # TODO - activation_neighbours is indexed twice?
         #clientsocket.send(str(activation_neighbours[node_index][0]).ljust(32))
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
-            self._activation_neighbours[node_index][0],
+            self._activation_neighbours[node_index],
             IMAGE_TYPES.background,
             False
         )
@@ -213,9 +223,23 @@ class SampleGUIServerWindow(QMainWindow):
         # TODO - why activation_neighbours is indexed twice?
         self._graphsController.set_new_values(
             node_index,
-            activation_level + self._activation_neighbours[node_index][0],
+            activation_level + self._activation_neighbours[node_index],
             white_pixels
         )
+
+        info = "Camera: " + str(camera_number) + ", " \
+               "{:.2f}".format(activation_level) + ", " + \
+               "{:.2f}".format(white_pixels) + ", " + \
+               ""
+        if node_index == 0:
+            self._label_picam1.setText("camera 0")
+        elif node_index == 1:
+            self._label_picam1.setText(info)
+        elif node_index == 2:
+            self._label_picam2.setText(info)
+
+        activations_neighbours_text = str(self._activation_neighbours)
+        self._label_activations_neighbours.setText(activations_neighbours_text)
 
     def log(self, msg):
         timestamp = '[%010.3f]' % time.clock()

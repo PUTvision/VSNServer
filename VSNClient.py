@@ -48,8 +48,9 @@ class VSNClientFactory(protocol.ClientFactory):
     #    p.factory = self
     #    return p
 
-    def __init__(self):
+    def __init__(self, packet_received_callback):
         self.client = None
+        self._packet_received_callback = packet_received_callback
 
     def clientConnectionLost(self, connector, reason):
         print "Disconnected, trying to reconnect"
@@ -67,6 +68,7 @@ class VSNClientFactory(protocol.ClientFactory):
 
     def client_received_data(self, packet):
         print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
+        self._packet_received_callback(packet)
 
     def send_packet(self, packet):
         if self.client:
