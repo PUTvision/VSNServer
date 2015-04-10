@@ -3,6 +3,8 @@ __author__ = 'Amin'
 import cv2
 import cv2.cv as cv
 
+from VSNPacket import IMAGE_TYPES
+
 
 class VSNImageProcessing:
 
@@ -11,7 +13,8 @@ class VSNImageProcessing:
         self._video_capture_number = video_capture_number
 
         self._capture = None
-        self._struct = None
+        self._structing_element = None
+        self._difference_thresholded_image = None
         self._background_image = None
         self._foreground_image = None
 
@@ -28,13 +31,29 @@ class VSNImageProcessing:
               str(self._capture.get(cv.CV_CAP_PROP_FRAME_HEIGHT)) + \
               ")"
 
+        frame = None
         # let the camera adjust the auto parameters (gain etc.) on a few images
         for x in xrange(0, 15):
             ret, frame = self._capture.read()
+        # init all the images with last of the acquired frame
         self._background_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        self._struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        self._foreground_image = self._background_image
+        self._difference_image = self._background_image
 
-    def do_image_processing(self):
+        self._structing_element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+
+    def get_image(self, image_type):
+        image = None
+        if image_type == IMAGE_TYPES.foreground:
+            image = self._foreground_image
+        elif image_type == IMAGE_TYPES.background:
+            image = self._background_image
+        else:
+            image = self._difference_image
+
+        return image
+
+    def get_percentage_of_active_pixels_in_new_frame_from_camera(self):
         # grab and process frame, update the background and foreground model
         ret, frame = self._capture.read()
         # process the frame
@@ -47,8 +66,10 @@ class VSNImageProcessing:
         # do the thresholding
         display = cv2.compare(blurred, 6, cv2.CMP_GT)
         # erode and dilate
-        eroded = cv2.erode(display, self._struct)
-        dilated = cv2.dilate(eroded, self._struct)
+        eroded = cv2.erode(display, self._structing_element)
+        dilated = cv2.dilate(eroded, self._structing_element)
+        # store the difference image for further usage
+        self._difference_thresholded_image = dilated
         # count non zero elements
         nonzero_pixels = cv2.countNonZero(dilated)
         # calculate the number of non-zero pixels
@@ -73,18 +94,12 @@ if __name__ == "__main__":
     while True:
 
         # main loop
-        key = cv2.waitKey(int(VSN_activity_controller.sample_time*1000.0))
+        key = cv2.waitKey(int(VSN_activity_controller.get_sample_time()*1000.0))
         if key == 27:  # exit on ESC
             break
-        percentage_of_nonzero_pixels_ = VSN_image_processor.do_image_processing()
-        VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_nonzero_pixels_)
-        cv2.imshow('fg', VSN_image_processor._background_image)
-        print "Params: " + \
-              str(VSN_activity_controller.activation_level) + \
-              ", " + \
-              str(VSN_activity_controller.gain) + \
-              ", " +\
-              str(VSN_activity_controller.sample_time) + \
-              "\r\n"
+        percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
+        VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels_)
+        cv2.imshow('current frame', VSN_image_processor.get_image(IMAGE_TYPES.foreground))
+        print VSN_activity_controller.get_state_as_string()
 
     cv2.destroyAllWindows()

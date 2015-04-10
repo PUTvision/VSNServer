@@ -8,7 +8,10 @@ from VSNUtility import enum
 # from the network stream to higher level of processing
 
 # TODO: convert this classes to simple struct like objects
-# and offer methods that invoke appropriate action based on the data provieded (Clean Codechapter 6)
+# and offer methods that invoke appropriate action based on the data provided (Clean Codoe chapter 6)
+
+IMAGE_TYPES = enum(foreground='fg', background='bg', difference='df')
+
 
 class VSNPacket:
     def __init__(self):
@@ -53,8 +56,6 @@ class VSNPacketImage:
 
     def set(self, image_as_string):
         self._image = image_as_string
-
-IMAGE_TYPES = enum(foreground='fg', background='bg')
 
 
 class VSNPacketToClient:

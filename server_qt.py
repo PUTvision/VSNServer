@@ -203,8 +203,8 @@ class SampleGUIServerWindow(QMainWindow):
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
             self._activation_neighbours[node_index],
-            IMAGE_TYPES.background,
-            False
+            IMAGE_TYPES.foreground,
+            True
         )
         client.send_packet(packet_to_send)
 
