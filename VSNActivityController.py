@@ -54,9 +54,10 @@ class VSNActivityController:
         # compute the sensor state based on captured images
         activation_level_updated = self._lowpass(
             self._activation_level,
-            percentage_of_active_pixels,
+            percentage_of_active_pixels + self._activation_neighbours,
         )
-        self._activation_level = activation_level_updated + self._activation_neighbours
+        #self._activation_level = activation_level_updated + self._activation_neighbours
+        self._activation_level = activation_level_updated
 
         # update sampling time and gain based on current activity level
         if self._activation_level < self._activation_level_threshold:
