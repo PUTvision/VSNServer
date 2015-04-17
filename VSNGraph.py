@@ -8,6 +8,7 @@ class VSNGraphController:
     def __init__(self):
         self._graphs = []
         self._win = None
+        # TODO: remove this temporary buffers, put them into VSNGraph class and add appropriate methods
         # current activation level
         self._activations = np.zeros((4, 1))
         # white pixel percentage

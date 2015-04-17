@@ -54,13 +54,16 @@ class VSNPicam:
         print "Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name
 
     def _do_regular_update(self):
-        # queue the next call to itself
-        reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
 
         percentage_of_active_pixels = self._image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         self._activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
 
-        print self._activity_controller.get_state_as_string()
+        # queue the next call to itself
+        reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
+
+        print self._activity_controller.get_state_as_string() + \
+              ", % of active pixels: " + str(percentage_of_active_pixels) + \
+              "\r\n"
 
         self._packet_to_send.set(
             self._node_number,
@@ -81,7 +84,9 @@ class VSNPicam:
 
     def _packet_received_callback(self, packet):
         print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
-        self._activity_controller.set_params(packet.activation_neighbours)
+        self._activity_controller.set_params(
+            activation_neighbours=packet.activation_neighbours
+        )
         self._flag_send_image = packet.flag_send_image
         self._image_type = packet.image_type
 
