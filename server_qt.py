@@ -71,7 +71,7 @@ from VSNActivityController import GainSampletimeTuple
 
 class VSNCameraData:
     def __init__(self):
-        self._activation_level = 0.0
+        self.activation_level = 0.0
         self.percentage_of_active_pixels = 0.0
         # current neighbouring nodes activation level
         self.activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
@@ -93,7 +93,7 @@ class VSNCameraData:
         else:
             self.ticks_in_normal_operation_mode += 1
 
-        self._activation_level = activation_level
+        self.activation_level = activation_level
 
 
 class VSNCameras:
@@ -107,7 +107,7 @@ class VSNCameras:
         }
 
         self.cameras = {}
-        # TODO: remove the automatic creation of 4 cameras and to is as new cameras connect
+        # TODO: remove the automatic creation of 4 cameras and do it as new cameras connect
         self.add_camera(1)
         self.add_camera(2)
         self.add_camera(3)
@@ -129,6 +129,18 @@ class VSNCameras:
     def get_percentage_of_active_pixels(self, camera_number):
         camera_name = self._convert_camera_number_to_camera_name(camera_number)
         return self.cameras[camera_name].percentage_of_active_pixels
+
+    def get_status(self, camera_number):
+        camera_name = self._convert_camera_number_to_camera_name(camera_number)
+        return (camera_name,
+                self.cameras[camera_name].percentage_of_active_pixels,
+                self.cameras[camera_name].activation_level,
+                self.cameras[camera_name].activation_neighbours,
+                self.cameras[camera_name]._parameters.gain,
+                self.cameras[camera_name]._parameters.sample_time,
+                self.cameras[camera_name].ticks_in_low_power_mode,
+                self.cameras[camera_name].ticks_in_normal_operation_mode
+                )
 
     def add_camera(self, camera_number):
         camera_name = self._convert_camera_number_to_camera_name(camera_number)
@@ -172,6 +184,8 @@ class VSNCameras:
 
 class SampleGUIServerWindow(QMainWindow):
     def __init__(self, reactor, parent=None):
+        self._TCP_PORT = 50001
+
         super(SampleGUIServerWindow, self).__init__(parent)
         self.reactor = reactor
 
@@ -193,36 +207,25 @@ class SampleGUIServerWindow(QMainWindow):
         self._cameras = VSNCameras()
 
     def create_main_frame(self):
+        # unused elements
         self.circle_widget = CircleWidget()
-        self.doit_button = QPushButton('Do it!')
-        self.doit_button.clicked.connect(self.on_doit)
-        self.log_widget = LogWidget()
+        #hbox_row_2.addWidget(self.circle_widget)
 
+        # first row
+        hbox_row_1 = QHBoxLayout()
+
+        self.log_widget = LogWidget()
         self.label_image = QtGui.QLabel()
         myPixmap = QtGui.QPixmap(_fromUtf8('Crazy-Cat.jpg'))
         myScaledPixmap = myPixmap.scaled(self.label_image.size(), Qt.KeepAspectRatio)
         self.label_image.setPixmap(myScaledPixmap)
 
-        self._label_picam1 = QtGui.QLabel("picam01")
-        self._label_picam2 = QtGui.QLabel("picam02")
-        self._label_picam3 = QtGui.QLabel("picam03")
-        self._label_picam4 = QtGui.QLabel("picam04")
-        self._label_activations_neighbours = QtGui.QLabel("activations_neighbours")
-
-        hbox_row_1 = QHBoxLayout()
         hbox_row_1.addWidget(self.log_widget)
         hbox_row_1.addWidget(self.label_image)
 
+        # second row
         hbox_row_2 = QHBoxLayout()
-        #hbox_row_2.addWidget(self.circle_widget)
-        hbox_row_2.addWidget(self._label_picam1)
-        hbox_row_2.addWidget(self._label_picam2)
-        hbox_row_2.addWidget(self._label_picam3)
-        hbox_row_2.addWidget(self._label_picam4)
-        hbox_row_2.addWidget(self.doit_button)
 
-
-        hbox_row_3 = QHBoxLayout()
         cameras = ['picam01',
                    'picam02',
                    'picam03',
@@ -231,22 +234,75 @@ class SampleGUIServerWindow(QMainWindow):
         # Create and fill the combo box to choose the salutation
         self.combo_box_cameras = QComboBox()
         self.combo_box_cameras.addItems(cameras)
-        hbox_row_3.addWidget(self.combo_box_cameras)
+
         self.button_choose_camera = QPushButton('choose')
         self.button_choose_camera.clicked.connect(self.on_choose_camera_clicked)
-        hbox_row_3.addWidget(self.button_choose_camera)
+
+        self.doit_button = QPushButton('Do it!')
+        self.doit_button.clicked.connect(self.on_doit)
+
+        hbox_row_2.addWidget(self.combo_box_cameras)
+        hbox_row_2.addWidget(self.button_choose_camera)
+        hbox_row_2.addWidget(self.doit_button)
+
         # TODO: add combo box and QLineEdit to set all the parameters
 
         vbox = QtGui.QVBoxLayout()
         vbox.addLayout(hbox_row_1)
         vbox.addLayout(hbox_row_2)
-        vbox.addLayout(hbox_row_3)
-        vbox.addWidget(self._label_activations_neighbours)
+
+        vbox.addLayout(self._create_status_monitor())
 
         main_frame = QWidget()
         main_frame.setLayout(vbox)
 
         self.setCentralWidget(main_frame)
+
+    def _create_status_monitor(self):
+        vbox = QtGui.QVBoxLayout()
+
+        self._picam_labels = {}
+
+        label_description = QtGui.QLabel("picam_name\t" +
+                                         "active_pixels\t" +
+                                         "activity_level\t" +
+                                         "neighbours\t" +
+                                         "gain\t" +
+                                         "sample_time\t" +
+                                         "low_power_ticks\t" +
+                                         "normal_ticks"
+                                         )
+        vbox.addWidget(label_description)
+
+        for i in xrange(1, 5):
+            picam_name = "picam" + str(i).zfill(2)
+            self._picam_labels[picam_name] = QtGui.QLabel()
+            self._picam_labels[picam_name].setText(picam_name + ": ")
+
+            vbox.addWidget(self._picam_labels[picam_name])
+
+        return vbox
+
+    def _update_status_monitor(self, camera_number):
+        camera_name, \
+        active_pixels, \
+        activation_level,\
+        neighbours, \
+        gain, \
+        sample_time, \
+        low_power_ticks, \
+        normal_ticks = self._cameras.get_status(camera_number)
+
+        status = camera_name + "\t\t" + \
+                 "{:.2f}".format(active_pixels) + "\t\t" + \
+                 "{:.2f}".format(activation_level) + "\t\t" + \
+                 "{:.2f}".format(neighbours) + "\t\t" + \
+                 "{0: <3}".format(gain) + "\t" + \
+                 "{:.2f}".format(sample_time) + "\t\t" + \
+                 "{0: <4}".format(low_power_ticks) + "\t\t" + \
+                 "{0: <4}".format(normal_ticks)
+
+        self._picam_labels[camera_name].setText(status)
 
     def create_timer(self):
         self.circle_timer = QTimer(self)
@@ -264,7 +320,7 @@ class SampleGUIServerWindow(QMainWindow):
         # When the connection is made, self.client calls the on_client_connect
         # callback.
         #
-        endpoint = TCP4ServerEndpoint(reactor, TCP_PORT)
+        endpoint = TCP4ServerEndpoint(reactor, self._TCP_PORT)
         endpoint.listen(self.server)
 
     def on_choose_camera_clicked(self):
@@ -335,26 +391,7 @@ class SampleGUIServerWindow(QMainWindow):
             white_pixels
         )
 
-        info = "Camera: " + str(camera_number) + ", " \
-               "{:.2f}".format(activation_level) + ", " + \
-               "{:.2f}".format(white_pixels) + ", " + \
-               ""
-        if node_index == 0:
-            self._label_picam1.setText(info)
-        elif node_index == 1:
-            self._label_picam2.setText(info)
-        elif node_index == 2:
-            self._label_picam3.setText(info)
-        elif node_index == 3:
-            self._label_picam4.setText(info)
-
-        #activations_neighbours_text = str(self._activation_neighbours)
-        activations_neighbours_text = ""
-        activations_neighbours_text += str(self._cameras.get_activation_neighbours(1)) + "\r\n"
-        activations_neighbours_text += str(self._cameras.get_activation_neighbours(2)) + "\r\n"
-        activations_neighbours_text += str(self._cameras.get_activation_neighbours(3)) + "\r\n"
-        activations_neighbours_text += str(self._cameras.get_activation_neighbours(4)) + "\r\n"
-        self._label_activations_neighbours.setText(activations_neighbours_text)
+        self._update_status_monitor(camera_number)
 
     def log(self, msg):
         timestamp = '[%010.3f]' % time.clock()
@@ -362,11 +399,6 @@ class SampleGUIServerWindow(QMainWindow):
 
     def closeEvent(self, e):
         self.reactor.stop()
-
-
-#-------------------------------------------------------------------------------
-
-TCP_PORT = 50001
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
