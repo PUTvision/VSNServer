@@ -81,22 +81,28 @@ class SampleGUIServerWindow(QMainWindow):
         super(SampleGUIServerWindow, self).__init__(parent)
         self.reactor = reactor
 
+        self._graphsController = None
+
         self.create_main_frame()
         self.create_server()
         self.create_timer()
-
-        self._graphsController = VSNGraphController()
-        self._graphsController.create_graph_window()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
-
-        timer_plot = QtCore.QTimer(self)
-        timer_plot.timeout.connect(self._graphsController.update_graphs)
-        timer_plot.start(200)
+        self.create_graphs()
 
         self._cameras = VSNCameras()
+
+    def create_server(self):
+        self.server = VSNServerFactory(
+                        self.on_client_connection_made,
+                        self.on_client_connection_lost,
+                        self.on_client_data_received,
+                        self.on_client_image_received
+        )
+        self.log('Connecting...')
+        # When the connection is made, self.client calls the on_client_connect
+        # callback.
+        #
+        endpoint = TCP4ServerEndpoint(reactor, self._TCP_PORT)
+        endpoint.listen(self.server)
 
     def create_main_frame(self):
         # unused elements
@@ -123,7 +129,6 @@ class SampleGUIServerWindow(QMainWindow):
                    'picam03',
                    'picam04'
         ]
-        # Create and fill the combo box to choose the salutation
         self.combo_box_cameras = QComboBox()
         self.combo_box_cameras.addItems(cameras)
 
@@ -149,6 +154,23 @@ class SampleGUIServerWindow(QMainWindow):
         main_frame.setLayout(vbox)
 
         self.setCentralWidget(main_frame)
+
+    def create_timer(self):
+        self.circle_timer = QTimer(self)
+        self.circle_timer.timeout.connect(self.circle_widget.next)
+        self.circle_timer.start(25)
+
+    def create_graphs(self):
+        self._graphsController = VSNGraphController()
+        self._graphsController.create_graph_window()
+        self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
+
+        timer_plot = QtCore.QTimer(self)
+        timer_plot.timeout.connect(self._graphsController.update_graphs)
+        timer_plot.start(200)
 
     def _create_status_monitor(self):
         vbox = QtGui.QVBoxLayout()
@@ -196,25 +218,6 @@ class SampleGUIServerWindow(QMainWindow):
 
         self._picam_labels[camera_name].setText(status)
 
-    def create_timer(self):
-        self.circle_timer = QTimer(self)
-        self.circle_timer.timeout.connect(self.circle_widget.next)
-        self.circle_timer.start(25)
-
-    def create_server(self):
-        self.server = VSNServerFactory(
-                        self.on_client_connection_made,
-                        self.on_client_connection_lost,
-                        self.on_client_data_received,
-                        self.on_client_image_received
-        )
-        self.log('Connecting...')
-        # When the connection is made, self.client calls the on_client_connect
-        # callback.
-        #
-        endpoint = TCP4ServerEndpoint(reactor, self._TCP_PORT)
-        endpoint.listen(self.server)
-
     def on_choose_camera_clicked(self):
         self._cameras.choose_camera_to_stream(self.combo_box_cameras.currentText())
 
@@ -252,22 +255,10 @@ class SampleGUIServerWindow(QMainWindow):
         self.label_image.setPixmap(QtGui.QPixmap.fromImage(qi))
 
     def service_client(self, camera_number, white_pixels, activation_level, client):
-        # old way
-        # TODO - this should be corrected
-        #node_index = camera_number-1
-        #node_name = "picam" + str(camera_number).zfill(2)
-
-        #self._activation_neighbours[node_index] = 0
-        #for idx in xrange(0, 3):
-        #    self._activation_neighbours[node_index] += \
-        #        dependency_table[node_name][idx] * self._graphsController._percentages[idx]
-                #dependency_table[node_name][idx] * self._graphsController._activations[idx]
-
         activation_neighbours = self._cameras.update_state(camera_number, activation_level, white_pixels)
 
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
-            #self._activation_neighbours[node_index],
             activation_neighbours,
             IMAGE_TYPES.foreground,
             self._cameras.get_flag_send_image(camera_number)
@@ -278,7 +269,6 @@ class SampleGUIServerWindow(QMainWindow):
         node_index = camera_number - 1
         self._graphsController.set_new_values(
             node_index,
-            #activation_level + self._activation_neighbours[node_index],
             activation_level + activation_neighbours,
             white_pixels
         )
