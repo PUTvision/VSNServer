@@ -73,14 +73,17 @@ class VSNPicam:
         )
         self._client_factory.send_packet(self._packet_to_send)
 
-        # encode image for sending
         if self._flag_send_image:
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-            image_to_send = self._image_processor.get_image(self._image_type)
-            result, image_encoded = cv2.imencode('.jpg', image_to_send, encode_param)
-            data = numpy.array(image_encoded)
-            image_as_string = data.tostring()
+            image_as_string = self._encode_image_for_sending()
             self._client_factory.send_image(image_as_string)
+
+    def _encode_image_for_sending(self):
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+        image_to_send = self._image_processor.get_image(self._image_type)
+        result, image_encoded = cv2.imencode('.jpg', image_to_send, encode_param)
+        data = numpy.array(image_encoded)
+        image_as_string = data.tostring()
+        return image_as_string
 
     def _packet_received_callback(self, packet):
         print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
@@ -98,5 +101,10 @@ class VSNPicam:
         reactor.run()
 
 if __name__ == '__main__':
-    picam = VSNPicam("picam01", 0)
+    # the object can be created by specifying its name:
+    #picam = VSNPicam("picam01", 0)
+    # or by letting it get its name with gethostname function
+    # if it is in picamXY format it will be accepted
+    # otherwise picamXX name will be used
+    picam = VSNPicam(0)
     picam.start("127.0.0.1")
