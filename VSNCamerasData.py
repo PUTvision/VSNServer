@@ -6,20 +6,23 @@ from VSNActivityController import GainSampletimeTuple
 
 class VSNCameraData:
     def __init__(self):
+        # data from camera
         self.activation_level = 0.0
         self.percentage_of_active_pixels = 0.0
+        # data to camera that is calculated periodically
         self.activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
-        self.flag_send_image = False
-
+        # internal counters of camera state
         self.ticks_in_low_power_mode = 0
         self.ticks_in_normal_operation_mode = 0
-
-        # TODO: make below parameters meaningful
+        # camera parameters
+        self.flag_send_image = False
+        self.image_type = IMAGE_TYPES.foreground
         self._parameters_below_threshold = GainSampletimeTuple(2.0, 1.0)
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
         self._activation_level_threshold = 10.0
         self._parameters = self._parameters_below_threshold         # sample time and gain at startup
-        self.image_type = IMAGE_TYPES.foreground
+        # flag indicating that parameters should be send to camera
+        self.flag_parameters_changed = True
 
     def update_activation_level(self, activation_level):
         if activation_level < self._activation_level_threshold:
@@ -32,7 +35,7 @@ class VSNCameraData:
 
 class VSNCameras:
     def __init__(self):
-        # TODO: this should be automaticly created or even put inside the CameraData class
+        # TODO: this should be automatically created or even put inside the CameraData class
         self._dependency_table = {
             'picam01': [0.0, 0.5, 0.5, 0.5],
             'picam02': [0.5, 0.0, 0.5, 0.5],
