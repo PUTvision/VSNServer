@@ -61,9 +61,9 @@ class VSNPicam:
         # queue the next call to itself
         reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
 
-        print self._activity_controller.get_state_as_string() + \
-              ", % of active pixels: " + str(percentage_of_active_pixels) + \
-              "\r\n"
+        self._flush_image_buffer_when_going_low_power()
+
+        print self._activity_controller.get_state_as_string() + "\r\n"
 
         self._packet_to_send.set(
             self._node_number,
@@ -76,6 +76,11 @@ class VSNPicam:
         if self._flag_send_image:
             image_as_string = self._encode_image_for_sending()
             self._client_factory.send_image(image_as_string)
+
+    def _flush_image_buffer_when_going_low_power(self):
+        if self._activity_controller.is_activation_below_threshold():
+            self._image_processor.grab_images(5)
+
 
     def _encode_image_for_sending(self):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]

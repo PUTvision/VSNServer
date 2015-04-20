@@ -42,7 +42,7 @@ class VSNGraphController:
     def update_graphs(self):
         # TODO: remove this limitation to four objects
         for i, graph in enumerate(self._graphs):
-            if i < 4:
+            if i < len(self._graphs):
                 graph.update_graph(self._activations[i], self._percentages[i])
 
 

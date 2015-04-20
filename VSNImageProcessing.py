@@ -84,6 +84,10 @@ class VSNImageProcessing:
 
         return percentage_of_nonzero_pixels
 
+    def grab_images(self, number_of_images_to_grab):
+        for i in xrange(0, number_of_images_to_grab):
+            ret, frame = self._capture.read()
+
 from VSNActivityController import VSNActivityController
 
 

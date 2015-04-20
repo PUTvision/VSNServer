@@ -18,6 +18,7 @@ class VSNActivityController:
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
         self._activation_level_threshold = 10.0
 
+        self._percentage_of_active_pixels = 0.0
         self._activation_level = 0.0                                # default starting activation level
         self._parameters = self._parameters_below_threshold         # sample time and gain at startup
         self._activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
@@ -47,10 +48,21 @@ class VSNActivityController:
     def get_sample_time(self):
         return self._parameters.sample_time
 
+    def get_percentage_of_active_pixels(self):
+        return self._percentage_of_active_pixels
+
     def get_activation_level(self):
         return self._activation_level
 
+    def is_activation_below_threshold(self):
+        result = False
+        if self._activation_level < self._activation_level_threshold:
+            result = True
+        return result
+
     def update_sensor_state_based_on_captured_image(self, percentage_of_active_pixels):
+        # store the incoming data
+        self._percentage_of_active_pixels = percentage_of_active_pixels
         # compute the sensor state based on captured images
         activation_level_updated = self._lowpass(
             self._activation_level,
@@ -67,7 +79,9 @@ class VSNActivityController:
 
     def get_state_as_string(self):
         return "Params: \r\n" + \
-               "Activation level: " + \
+               "% of active pixels: " + \
+               str(self._percentage_of_active_pixels) + \
+               ", activation level: " + \
                str(self._activation_level) + \
                ", gain: " + \
                str(self._parameters.gain) + \
