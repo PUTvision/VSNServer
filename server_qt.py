@@ -127,7 +127,8 @@ class SampleGUIServerWindow(QMainWindow):
         cameras = ['picam01',
                    'picam02',
                    'picam03',
-                   'picam04'
+                   'picam04',
+                   'picam05'
         ]
         self.combo_box_cameras = QComboBox()
         self.combo_box_cameras.addItems(cameras)
@@ -167,6 +168,7 @@ class SampleGUIServerWindow(QMainWindow):
         self._graphsController.add_new_graph()
         self._graphsController.add_new_graph()
         self._graphsController.add_new_graph()
+        self._graphsController.add_new_graph()
 
         timer_plot = QtCore.QTimer(self)
         timer_plot.timeout.connect(self._graphsController.update_graphs)
@@ -188,7 +190,7 @@ class SampleGUIServerWindow(QMainWindow):
                                          )
         vbox.addWidget(label_description)
 
-        for i in xrange(1, 5):
+        for i in xrange(1, 6):
             picam_name = "picam" + str(i).zfill(2)
             self._picam_labels[picam_name] = QtGui.QLabel()
             self._picam_labels[picam_name].setText(picam_name + ": ")

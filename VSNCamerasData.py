@@ -37,10 +37,11 @@ class VSNCameras:
     def __init__(self):
         # TODO: this should be automatically created or even put inside the CameraData class
         self._dependency_table = {
-            'picam01': [0.0, 0.5, 0.5, 0.5],
-            'picam02': [0.5, 0.0, 0.5, 0.5],
-            'picam03': [0.5, 0.5, 0.0, 0.5],
-            'picam04': [0.5, 0.5, 0.5, 0.0]
+            'picam01': [0.0, 0.5, 0.5, 0.5, 0.5],
+            'picam02': [0.5, 0.0, 0.5, 0.5, 0.5],
+            'picam03': [0.5, 0.5, 0.0, 0.5, 0.5],
+            'picam04': [0.5, 0.5, 0.5, 0.0, 0.5],
+            'picam05': [0.5, 0.5, 0.5, 0.5, 0,0]
         }
 
         self.cameras = {}
@@ -49,6 +50,7 @@ class VSNCameras:
         self.add_camera(2)
         self.add_camera(3)
         self.add_camera(4)
+        self.add_camera(5)
 
     def choose_camera_to_stream(self, camera_name):
         for key in self.cameras:
@@ -100,8 +102,8 @@ class VSNCameras:
     def _calculate_neighbour_activation_level(self, camera_name):
         # TODO: change it to check against the real number of cameras in the system
         self.cameras[camera_name].activation_neighbours = 0.0
-        for idx in xrange(0, 3):
-            # idx+1 is used because cameras are numbered 1, 2, 3, 4
+        for idx in xrange(0, len(self.cameras)-1):
+            # idx+1 is used because cameras are numbered 1, 2, 3, 4, 5
             current_camera_name = "picam" + str(idx+1).zfill(2)
             self.cameras[camera_name].activation_neighbours += \
                 self._dependency_table[camera_name][idx] * self.cameras[current_camera_name].percentage_of_active_pixels

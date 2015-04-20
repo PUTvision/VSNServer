@@ -10,9 +10,9 @@ class VSNGraphController:
         self._win = None
         # TODO: remove this temporary buffers, put them into VSNGraph class and add appropriate methods
         # current activation level
-        self._activations = np.zeros((4, 1))
+        self._activations = np.zeros((5, 1))
         # white pixel percentage
-        self._percentages = np.zeros((4, 1))
+        self._percentages = np.zeros((5, 1))
 
     def create_graph_window(self):
         # set default background color to white
