@@ -54,14 +54,13 @@ class VSNPicam:
         print "Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name
 
     def _do_regular_update(self):
+        # queue the next call to itself
+        reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
 
         percentage_of_active_pixels = self._image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         self._activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
 
-        # queue the next call to itself
-        reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
-
-        self._flush_image_buffer_when_going_low_power()
+        #self._flush_image_buffer_when_going_low_power()
 
         print self._activity_controller.get_state_as_string() + "\r\n"
 
