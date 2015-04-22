@@ -54,7 +54,6 @@ class VSNImageProcessing:
         return image
 
     def get_percentage_of_active_pixels_in_new_frame_from_camera(self):
-        self.grab_images(5)
         # grab and process frame, update the background and foreground model
         ret, frame = self._capture.read()
         # process the frame
