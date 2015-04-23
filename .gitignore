@@ -1,12 +1,13 @@
+# Amin
+# PyCharm ignore
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 
 # C extensions
 *.so
-
-# MF - PyCharm ignore
-.idea/
 
 # Distribution / packaging
 .Python
