@@ -4,7 +4,7 @@ from VSNClient import VSNClientFactory
 from VSNPacket import VSNPacket
 from VSNPacket import IMAGE_TYPES
 from VSNImageProcessing import VSNImageProcessing
-from VSNImageProcessing import VSNActivityController
+from VSNActivityController import VSNActivityController
 
 from twisted.internet import reactor
 
@@ -90,7 +90,7 @@ class VSNPicam:
         return image_as_string
 
     def _packet_received_callback(self, packet):
-        print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type
+        print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type, ", ", packet.flag_send_image
         self._activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )
