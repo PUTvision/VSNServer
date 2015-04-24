@@ -4,23 +4,23 @@ import struct
 
 from common.VSNUtility import enum
 
-
-
 # Definitions of DTOs - Data Transfer Objects used for moving data
 # from the network stream to higher level of processing
 
-# TODO: convert this classes to simple struct like objects
-# and offer methods that invoke appropriate action based on the data provided (Clean Codoe chapter 6)
+# TODO: convert this classes to simple struct like objects ...
+# TODO: ... and offer methods that invoke appropriate action based on the data provided (Clean Code chapter 6)
 
 IMAGE_TYPES = enum(foreground='fg', background='bg', difference='df')
+
+# struct usage:
+# https://docs.python.org/2/library/struct.html
+# !i:
+# ! => network (= big-endian)
+# i => int
 
 
 class VSNPacket:
     def __init__(self):
-        # https://docs.python.org/2/library/struct.html
-        # !i:
-        # ! => network (= big-endian)
-        # i => int
         self._struct_format = "! i f f ?"
         self._prefixLength = struct.calcsize(self._struct_format)
         self._s = struct.Struct(self._struct_format)
@@ -62,7 +62,6 @@ class VSNPacketImage:
 
 class VSNPacketToClient:
     def __init__(self):
-        # https://docs.python.org/2/library/struct.html
         self._struct_format = "! f 2s ?"
         self._prefixLength = struct.calcsize(self._struct_format)
         self._s = struct.Struct(self._struct_format)
