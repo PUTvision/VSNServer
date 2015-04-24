@@ -1,7 +1,7 @@
 __author__ = 'Amin'
 
-from VSNPacket import IMAGE_TYPES
-from VSNActivityController import GainSampletimeTuple
+from common.VSNPacket import IMAGE_TYPES
+from client.VSNActivityController import GainSampletimeTuple
 
 
 class VSNCameraData:

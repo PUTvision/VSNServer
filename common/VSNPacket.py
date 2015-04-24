@@ -1,7 +1,9 @@
 __author__ = 'Amin'
 
 import struct
-from VSNUtility import enum
+
+from common.VSNUtility import enum
+
 
 
 # Definitions of DTOs - Data Transfer Objects used for moving data

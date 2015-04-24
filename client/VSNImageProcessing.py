@@ -1,9 +1,11 @@
+from client import VSNActivityController
+
 __author__ = 'Amin'
 
 import cv2
 import cv2.cv as cv
 
-from VSNPacket import IMAGE_TYPES
+from common.VSNPacket import IMAGE_TYPES
 
 
 class VSNImageProcessing:
@@ -87,8 +89,6 @@ class VSNImageProcessing:
     def grab_images(self, number_of_images_to_grab):
         for i in xrange(0, number_of_images_to_grab):
             ret, frame = self._capture.read()
-
-from VSNActivityController import VSNActivityController
 
 
 if __name__ == "__main__":

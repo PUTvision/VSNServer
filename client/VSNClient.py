@@ -1,11 +1,12 @@
+from common import VSNPacket
+
 __author__ = 'Amin'
 from twisted.protocols import basic
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import task
 
-from VSNPacket import VSNPacket
-from VSNPacket import VSNPacketToClient
+from common.VSNPacket import VSNPacketToClient
 
 
 class VSNClient(basic.Int32StringReceiver):

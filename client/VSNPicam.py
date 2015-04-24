@@ -1,10 +1,10 @@
+from client import VSNImageProcessing, VSNActivityController
+from common import VSNPacket
+
 __author__ = 'Amin'
 
-from VSNClient import VSNClientFactory
-from VSNPacket import VSNPacket
-from VSNPacket import IMAGE_TYPES
-from VSNImageProcessing import VSNImageProcessing
-from VSNActivityController import VSNActivityController
+from client.VSNClient import VSNClientFactory
+from common.VSNPacket import IMAGE_TYPES
 
 from twisted.internet import reactor
 
