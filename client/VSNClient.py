@@ -1,10 +1,8 @@
-from common import VSNPacket
-
 __author__ = 'Amin'
+
 from twisted.protocols import basic
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.internet import task
 
 from common.VSNPacket import VSNPacketToClient
 
@@ -12,8 +10,7 @@ from common.VSNPacket import VSNPacketToClient
 class VSNClient(basic.Int32StringReceiver):
 
     def __init__(self):
-        # parameters
-        self._private_parameter = 0
+        pass
 
     # callbacks and functions to override
 
@@ -79,26 +76,33 @@ class VSNClientFactory(protocol.ClientFactory):
             self.client.send_image(image_as_string)
 
 
+from twisted.internet import task
+from common.VSNPacket import VSNPacket
+
+
 def send_packet(packet):
     client_factory.send_packet(packet)
 
+
+def packet_receive_callback(packet):
+    print "Received packet: " + \
+          str(packet.activation_neighbours) + ", " + \
+          str(packet.image_type) + ", " + \
+          str(packet.flag_send_image) + "\r\n"
+
 if __name__ == '__main__':
-    # constant definitions
-    #SERVER_IP = '192.168.0.100'
     SERVER_IP = '127.0.0.1'
     SERVER_PORT = 50001
 
     # create factory protocol and application
-    client_factory = VSNClientFactory()
+    client_factory = VSNClientFactory(packet_receive_callback)
 
     # connect factory to this host and port
     reactor.connectTCP(SERVER_IP, SERVER_PORT, client_factory)
 
-    periodic_action = None
     VSN_packet = VSNPacket()
-    VSN_packet.set(0, 2.0, 4.0)
+    VSN_packet.set(1, 10.0, 5.0, False)
     periodic_action = task.LoopingCall(send_packet, VSN_packet)
     periodic_action.start(2.0)
-    #self.periodic_action.stop()
 
     reactor.run()

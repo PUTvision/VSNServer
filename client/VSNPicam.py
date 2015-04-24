@@ -1,10 +1,4 @@
-from client import VSNImageProcessing, VSNActivityController
-from common import VSNPacket
-
 __author__ = 'Amin'
-
-from client.VSNClient import VSNClientFactory
-from common.VSNPacket import IMAGE_TYPES
 
 from twisted.internet import reactor
 
@@ -12,12 +6,19 @@ import socket
 import cv2
 import numpy
 
+from client.VSNImageProcessing import VSNImageProcessing
+from client.VSNActivityController import VSNActivityController
+from common.VSNPacket import VSNPacket
+
+from client.VSNClient import VSNClientFactory
+from common.VSNPacket import IMAGE_TYPES
+
 
 class VSNPicam:
 
     def __init__(self, camera_name=None, video_capture_number=0):
         self._node_name = camera_name
-        self._node_number = None
+        self._node_number = 3
         self._flag_send_image = False           # default behavior - do not send the image data
         self._image_type = IMAGE_TYPES.foreground
 
@@ -38,15 +39,11 @@ class VSNPicam:
         self._reactor = None
 
     def _prepare_camera_name_and_number(self):
-        # check the length of the picamXX word - just for testing
-        #print 'picamXX length: ', len(self._node_name)
-
         # if the names was not set try getting it by gethostname
-        # it is of picamXX type parse XX to number
+        # it is of picamXX type parse XX to a number
 
         if self._node_name is None:
             self._node_name = socket.gethostname()
-        self._node_number = 0
         if len(self._node_name) == 7 and self._node_name[0:5] == "picam":
             if self._node_name[5:7].isdigit():
                 self._node_number = int(self._node_name[5:7])
@@ -80,7 +77,6 @@ class VSNPicam:
         if self._activity_controller.is_activation_below_threshold():
             self._image_processor.grab_images(5)
 
-
     def _encode_image_for_sending(self):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         image_to_send = self._image_processor.get_image(self._image_type)
@@ -109,6 +105,8 @@ if __name__ == '__main__':
     #picam = VSNPicam("picam01", 0)
     # or by letting it get its name with gethostname function
     # if it is in picamXY format it will be accepted
-    # otherwise picamXX name will be used
-    picam = VSNPicam(0)
-    picam.start("127.0.0.1")
+    # otherwise picam03 name will be used
+    # second argument specify which camera should be used
+    picam = VSNPicam()
+    # if no args are specified, the 127.0.0.1 IP and 50001 port are used
+    picam.start()

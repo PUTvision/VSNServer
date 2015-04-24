@@ -12,12 +12,12 @@ from common.VSNUtility import enum
 
 IMAGE_TYPES = enum(foreground='fg', background='bg', difference='df')
 
+
 # struct usage:
 # https://docs.python.org/2/library/struct.html
 # !i:
 # ! => network (= big-endian)
 # i => int
-
 
 class VSNPacket:
     def __init__(self):
@@ -45,11 +45,7 @@ class VSNPacket:
         )
 
     def unpack_from_receive(self, string):
-        self.camera_number, \
-        self.white_pixels, \
-        self.activation_level, \
-        self.flag_image_next \
-            = self._s.unpack(string)
+        self.camera_number, self.white_pixels, self.activation_level, self.flag_image_next = self._s.unpack(string)
 
 
 class VSNPacketImage:

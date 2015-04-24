@@ -87,3 +87,23 @@ class VSNActivityController:
                str(self._parameters.gain) + \
                ", sample time: " + \
                str(self._parameters.sample_time)
+
+
+from common.VSNPacket import IMAGE_TYPES
+from client.VSNImageProcessing import VSNImageProcessing
+import cv2
+
+if __name__ == "__main__":
+    VSN_activity_controller = VSNActivityController()
+    VSN_image_processor = VSNImageProcessing()
+
+    key = 0
+    while key != 27:    # exit on ESC
+        # main loop
+        key = cv2.waitKey(int(VSN_activity_controller.get_sample_time()*1000))
+        percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
+        VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels_)
+        cv2.imshow('current frame', VSN_image_processor.get_image(IMAGE_TYPES.foreground))
+        print VSN_activity_controller.get_state_as_string()
+
+    cv2.destroyAllWindows()
