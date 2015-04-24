@@ -1,4 +1,4 @@
-from client import VSNPicam
+from client.VSNPicam import VSNPicam
 
 __author__ = 'Amin'
 

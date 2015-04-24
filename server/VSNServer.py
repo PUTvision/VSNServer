@@ -1,11 +1,10 @@
-from common import VSNPacket
-
 __author__ = 'Amin'
 
 from twisted.protocols import basic
 from twisted.internet import protocol
 
 from common.VSNUtility import enum
+from common.VSNPacket import VSNPacket
 
 
 RECEIVE_STATE = enum(packet_standard=1, packet_image=2)
