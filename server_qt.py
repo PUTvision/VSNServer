@@ -1,14 +1,13 @@
 __author__ = 'Amin'
 
-from twisted.internet.endpoints import TCP4ServerEndpoint
-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
 import sys
 import time
 
+from twisted.internet.endpoints import TCP4ServerEndpoint
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 from pyqtgraph.Qt import QtGui, QtCore
+
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -19,11 +18,12 @@ import numpy as np
 
 import cv2
 
-from VSNServer import VSNServerFactory
-from VSNPacket import VSNPacketToClient
-from VSNPacket import IMAGE_TYPES
-from VSNGraph import VSNGraphController
-from VSNCamerasData import VSNCameras
+from server import qt4reactor
+from server.VSNServer import VSNServerFactory
+from common.VSNPacket import VSNPacketToClient
+from common.VSNPacket import IMAGE_TYPES
+from server.VSNGraph import VSNGraphController
+from server.VSNCamerasData import VSNCameras
 
 
 class CircleWidget(QWidget):
@@ -286,12 +286,6 @@ class SampleGUIServerWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    try:
-        import qt4reactor
-    except ImportError:
-        # Maybe qt4reactor is placed inside twisted.internet in site-packages?
-        from twisted.internet import qt4reactor
     qt4reactor.install()
 
     from twisted.internet import reactor

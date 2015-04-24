@@ -1,6 +1,6 @@
-__author__ = 'Amin'
+from client import VSNPicam
 
-from VSNPicam import VSNPicam
+__author__ = 'Amin'
 
 if __name__ == '__main__':
     picam = VSNPicam(video_capture_number=0)
