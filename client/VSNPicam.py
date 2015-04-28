@@ -6,7 +6,7 @@ import socket
 import cv2
 import numpy
 
-from client.VSNImageProcessing_picam import VSNImageProcessing
+from client.VSNImageProcessing import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import VSNPacket
 
@@ -53,6 +53,9 @@ class VSNPicam:
     def _do_regular_update(self):
         # queue the next call to itself
         reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
+
+        if self._activity_controller.is_activation_below_threshold():
+            self._image_processor.grab_images(5)
 
         percentage_of_active_pixels = self._image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         self._activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
