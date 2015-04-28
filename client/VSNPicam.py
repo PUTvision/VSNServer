@@ -6,7 +6,7 @@ import socket
 import cv2
 import numpy
 
-from client.VSNImageProcessing import VSNImageProcessing
+from client.VSNImageProcessing_picam import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import VSNPacket
 
