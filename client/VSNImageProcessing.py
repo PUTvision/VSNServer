@@ -71,7 +71,7 @@ class VSNImageProcessing:
             nonzero_pixels = cv2.countNonZero(dilated)
             # calculate the number of non-zero pixels
             height, width = self._foreground_image.shape
-            percentage_of_nonzero_pixels = (nonzero_pixels * 100 / (height * width))
+            percentage_of_nonzero_pixels = (nonzero_pixels * 100.0 / (height * width))
             # prepare data for background update
             mask_gt = cv2.compare(self._background_image, self._foreground_image, cv2.CMP_GT)
             mask_lt = cv2.compare(self._background_image, self._foreground_image, cv2.CMP_LT)
