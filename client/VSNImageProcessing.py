@@ -87,6 +87,7 @@ class VSNImageProcessing:
     def grab_images(self, number_of_images_to_grab):
         for i in xrange(0, number_of_images_to_grab):
             self._capture.read()
+            cv2.waitKey(2)
 
 
 if __name__ == "__main__":
