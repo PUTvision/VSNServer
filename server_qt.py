@@ -139,9 +139,13 @@ class SampleGUIServerWindow(QMainWindow):
         self.doit_button = QPushButton('Do it!')
         self.doit_button.clicked.connect(self.on_doit)
 
+        self.clear_history_button = QPushButton("Clear history")
+        self.clear_history_button.clicked.connect(self.on_clear_history)
+
         hbox_row_2.addWidget(self.combo_box_cameras)
         hbox_row_2.addWidget(self.button_choose_camera)
         hbox_row_2.addWidget(self.doit_button)
+        hbox_row_2.addWidget(self.clear_history_button)
 
         # TODO: add combo box and QLineEdit to set all the parameters
 
@@ -234,6 +238,9 @@ class SampleGUIServerWindow(QMainWindow):
 
         self._cameras.save_cameras_data_to_files()
 
+    def on_clear_history(self):
+        self._cameras.clear_cameras_data()
+
     def on_client_connection_made(self):
         self.log('Connected to server.')
 
@@ -265,7 +272,7 @@ class SampleGUIServerWindow(QMainWindow):
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
             activation_neighbours,
-            IMAGE_TYPES.foreground,
+            IMAGE_TYPES.difference,
             self._cameras.get_flag_send_image(camera_number)
         )
         client.send_packet(packet_to_send)

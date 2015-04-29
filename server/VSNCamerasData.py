@@ -28,12 +28,17 @@ class VSNCameraData:
         # flag indicating that parameters should be send to camera
         self.flag_parameters_changed = True
 
+    def clear_history(self):
+        self._activation_level_history = []
+        self._percentage_of_active_pixels_history = []
+        self.ticks_in_normal_operation_mode = 0
+        self.ticks_in_low_power_mode = 0
+
     def update(self, activation_level, percentage_of_active_pixels):
         self.activation_level = activation_level
         self.percentage_of_active_pixels = percentage_of_active_pixels
 
-        self._activation_level_history.append(activation_level)
-        self._percentage_of_active_pixels_history.append(percentage_of_active_pixels)
+        self._update_history()
 
         self._update_ticks_counters()
 
@@ -43,7 +48,15 @@ class VSNCameraData:
         else:
             self.ticks_in_normal_operation_mode += 1
 
+    def _update_history(self):
+        if self.activation_level < self._activation_level_threshold:
+            number_of_elements_to_append = 10
+        else:
+            number_of_elements_to_append = 1
 
+        for i in xrange(0, number_of_elements_to_append):
+            self._activation_level_history.append(self.activation_level)
+            self._percentage_of_active_pixels_history.append(self.percentage_of_active_pixels)
 
 
 class VSNCameras:
@@ -110,6 +123,20 @@ class VSNCameras:
             pickle.dump(self.cameras[camera_name], new_file)
 
             new_file.close()
+
+    def load_cameras_data_from_files(self):
+        for i in xrange(1, 6):
+            camera_name = self._convert_camera_number_to_camera_name(i)
+            new_file = file(camera_name + ".txt", "r")
+
+            self.cameras[camera_name] = pickle.load(new_file)
+
+            new_file.close()
+
+    def clear_cameras_data(self):
+        for i in xrange(1, 6):
+            camera_name = self._convert_camera_number_to_camera_name(i)
+            self.cameras[camera_name].clear_history()
 
     def update_state(self, camera_number, activation_level, percentage_of_active_pixels):
         camera_name = self._convert_camera_number_to_camera_name(camera_number)

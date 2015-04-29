@@ -20,7 +20,6 @@ class VSNGraphController:
         # open the plot window, set properties
         self._win = pg.GraphicsWindow(title="VSN activity monitor")
         self._win.resize(1400, 800)
-        self._win.setWindowTitle('VSN activity monitor')
 
         for i, graph in enumerate(self._graphs):
             if i > 0 and i % 2 == 0:
@@ -65,7 +64,7 @@ class VSNGraph:
         self._bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
         cam_plot.addItem(self._bar)
         #set the scale of the plot
-        cam_plot.setYRange(0, 100)
+        cam_plot.setYRange(0, 200)
 
     def update_graph(self, activation_level, white_pixels_percentage):
         self.white_pixels_percentage = white_pixels_percentage
