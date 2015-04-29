@@ -16,7 +16,7 @@ class VSNActivityController:
 
         self._parameters_below_threshold = GainSampletimeTuple(2.0, 1.0)
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
-        self._activation_level_threshold = 10.0
+        self._activation_level_threshold = 15.0
 
         self._percentage_of_active_pixels = 0.0
         self._activation_level = 0.0                                # default starting activation level
@@ -26,7 +26,7 @@ class VSNActivityController:
 
     # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
     def _lowpass(self, prev_state, input_data, gain):
-        time_constant = 1.0
+        time_constant = 0.7
         output = \
             (gain / time_constant) * input_data + \
             prev_state * pow(math.e, -1.0 * (self._parameters.sample_time / time_constant))
