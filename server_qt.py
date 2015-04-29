@@ -224,12 +224,15 @@ class SampleGUIServerWindow(QMainWindow):
         self._cameras.choose_camera_to_stream(self.combo_box_cameras.currentText())
 
     def on_doit(self):
-        packet_to_client = VSNPacketToClient()
-        packet_to_client.set(4.5, IMAGE_TYPES.background, False)
-        self.server.send_packet_to_all_clients(packet_to_client)
+        # tests
+        #packet_to_client = VSNPacketToClient()
+        #packet_to_client.set(4.5, IMAGE_TYPES.background, False)
+        #self.server.send_packet_to_all_clients(packet_to_client)
 
         # test for adding new row to the graph window
-        self._graphsController.add_new_graph()
+        #self._graphsController.add_new_graph()
+
+        self._cameras.save_cameras_data_to_files()
 
     def on_client_connection_made(self):
         self.log('Connected to server.')

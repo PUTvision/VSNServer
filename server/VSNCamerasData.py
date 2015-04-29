@@ -3,12 +3,16 @@ __author__ = 'Amin'
 from common.VSNPacket import IMAGE_TYPES
 from client.VSNActivityController import GainSampletimeTuple
 
+import pickle
+
 
 class VSNCameraData:
     def __init__(self):
         # data from camera
         self.activation_level = 0.0
+        self._activation_level_history = []
         self.percentage_of_active_pixels = 0.0
+        self._percentage_of_active_pixels_history = []
         # data to camera that is calculated periodically
         self.activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
         # internal counters of camera state
@@ -24,13 +28,22 @@ class VSNCameraData:
         # flag indicating that parameters should be send to camera
         self.flag_parameters_changed = True
 
-    def update_activation_level(self, activation_level):
-        if activation_level < self._activation_level_threshold:
+    def update(self, activation_level, percentage_of_active_pixels):
+        self.activation_level = activation_level
+        self.percentage_of_active_pixels = percentage_of_active_pixels
+
+        self._activation_level_history.append(activation_level)
+        self._percentage_of_active_pixels_history.append(percentage_of_active_pixels)
+
+        self._update_ticks_counters()
+
+    def _update_ticks_counters(self):
+        if self.activation_level < self._activation_level_threshold:
             self.ticks_in_low_power_mode += 10
         else:
             self.ticks_in_normal_operation_mode += 1
 
-        self.activation_level = activation_level
+
 
 
 class VSNCameras:
@@ -89,13 +102,19 @@ class VSNCameras:
         camera_name = "picam" + str(camera_number).zfill(2)
         return camera_name
 
+    def save_cameras_data_to_files(self):
+        for i in xrange(1, 6):
+            camera_name = self._convert_camera_number_to_camera_name(i)
+            new_file = file(camera_name + ".txt", "w")
+
+            pickle.dump(self.cameras[camera_name], new_file)
+
+            new_file.close()
+
     def update_state(self, camera_number, activation_level, percentage_of_active_pixels):
         camera_name = self._convert_camera_number_to_camera_name(camera_number)
 
-        self.cameras[camera_name].update_activation_level(activation_level)
-
-        # update number of active pixels
-        self.cameras[camera_name].percentage_of_active_pixels = percentage_of_active_pixels
+        self.cameras[camera_name].update(activation_level, percentage_of_active_pixels)
 
         return self._calculate_neighbour_activation_level(camera_name)
 
