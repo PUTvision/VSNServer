@@ -25,10 +25,10 @@ class VSNActivityController:
         self._activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
 
     # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
-    def _lowpass(self, prev_state, input_data):
+    def _lowpass(self, prev_state, input_data, gain):
         time_constant = 1.0
         output = \
-            (self._parameters.gain / time_constant) * input_data + \
+            (gain / time_constant) * input_data + \
             prev_state * pow(math.e, -1.0 * (self._parameters.sample_time / time_constant))
         return output
 
@@ -68,12 +68,14 @@ class VSNActivityController:
         activation_level_updated_d = self._lowpass(
             self._activation_level_d,
             percentage_of_active_pixels + self._activation_neighbours,
+            self._parameters.gain
         )
         self._activation_level_d = activation_level_updated_d
 
         activation_level_updated = self._lowpass(
             self._activation_level,
-            self._activation_level_d
+            self._activation_level_d,
+            1.0
         )
         #self._activation_level = activation_level_updated + self._activation_neighbours
         self._activation_level = activation_level_updated
