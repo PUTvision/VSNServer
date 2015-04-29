@@ -78,7 +78,7 @@ class VSNPicam:
 
     def _flush_image_buffer_when_going_low_power(self):
         if self._activity_controller.is_activation_below_threshold():
-            self._image_processor.grab_images(5)
+            self._image_processor.grab_images(8)
 
     def _encode_image_for_sending(self):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
