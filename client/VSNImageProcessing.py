@@ -35,7 +35,7 @@ class VSNImageProcessing:
         # init all the images with last of the acquired frame
         self._background_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         self._foreground_image = self._background_image
-        self._difference_image = self._background_image
+        self._difference_thresholded_image = self._background_image
 
         self._structing_element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
@@ -45,7 +45,7 @@ class VSNImageProcessing:
         elif image_type == IMAGE_TYPES.background:
             image = self._background_image
         else:
-            image = self._difference_image
+            image = self._difference_thresholded_image
 
         return image
 
