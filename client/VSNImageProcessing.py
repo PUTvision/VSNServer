@@ -79,7 +79,7 @@ class VSNImageProcessing:
             self._background_image += mask_lt / 128.0
             self._background_image -= mask_gt / 128.0
         else:
-            percentage_of_nonzero_pixels = 0
+            percentage_of_nonzero_pixels = 0.0
 
         return percentage_of_nonzero_pixels
 

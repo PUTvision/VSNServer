@@ -20,6 +20,7 @@ class VSNActivityController:
 
         self._percentage_of_active_pixels = 0.0
         self._activation_level = 0.0                                # default starting activation level
+        self._activation_level_d = 0.0
         self._parameters = self._parameters_below_threshold         # sample time and gain at startup
         self._activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
 
@@ -64,9 +65,15 @@ class VSNActivityController:
         # store the incoming data
         self._percentage_of_active_pixels = percentage_of_active_pixels
         # compute the sensor state based on captured images
+        activation_level_updated_d = self._lowpass(
+            self._activation_level_d,
+            percentage_of_active_pixels + self._activation_neighbours,
+        )
+        self._activation_level_d = activation_level_updated_d
+
         activation_level_updated = self._lowpass(
             self._activation_level,
-            percentage_of_active_pixels + self._activation_neighbours,
+            self._activation_level_d
         )
         #self._activation_level = activation_level_updated + self._activation_neighbours
         self._activation_level = activation_level_updated
