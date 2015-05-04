@@ -23,7 +23,7 @@ class VSNCameraData:
         self.image_type = IMAGE_TYPES.foreground
         self._parameters_below_threshold = GainSampletimeTuple(2.0, 1.0)
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
-        self._activation_level_threshold = 10.0
+        self._activation_level_threshold = 15.0
         self._parameters = self._parameters_below_threshold         # sample time and gain at startup
         # flag indicating that parameters should be send to camera
         self.flag_parameters_changed = True
@@ -63,11 +63,11 @@ class VSNCameras:
     def __init__(self):
         # TODO: this should be automatically created or even put inside the CameraData class
         self._dependency_table = {
-            'picam01': [0.0, 0.7, 0.3, 0.0, 0.0],
-            'picam02': [0.5, 0.0, 0.5, 0.2, 0.0],
-            'picam03': [0.2, 0.5, 0.0, 0.5, 0.2],
-            'picam04': [0.0, 0.2, 0.5, 0.0, 0.5],
-            'picam05': [0.0, 0.0, 0.3, 0.7, 0.0]
+            'picam01': [0.0, 0.5, 0.2, 0.0, 0.0],
+            'picam02': [0.5, 0.0, 0.5, 0.1, 0.0],
+            'picam03': [0.1, 0.5, 0.0, 0.5, 0.2],
+            'picam04': [0.0, 0.1, 0.5, 0.0, 0.5],
+            'picam05': [0.0, 0.0, 0.2, 0.5, 0.0]
         }
 
         self.cameras = {}

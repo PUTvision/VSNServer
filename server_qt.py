@@ -272,7 +272,8 @@ class SampleGUIServerWindow(QMainWindow):
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
             activation_neighbours,
-            IMAGE_TYPES.difference,
+            #IMAGE_TYPES.difference,
+            IMAGE_TYPES.foreground,
             self._cameras.get_flag_send_image(camera_number)
         )
         client.send_packet(packet_to_send)

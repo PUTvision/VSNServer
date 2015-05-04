@@ -50,6 +50,7 @@ class VSNImageProcessing:
         self._structing_element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
     def _grab_new_image_in_opencv_format(self):
+        self._camera.capture(self._stream, format="jpeg")
         data = np.fromstring(self._stream.getvalue(), dtype=np.uint8)
         frame = cv2.imdecode(data, 1)
 

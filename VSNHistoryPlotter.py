@@ -25,13 +25,13 @@ class VSNHistoryPlotter:
         pg.setConfigOption('background', 'w')
         # open the plot window, set properties
         self._win_activation = pg.GraphicsWindow(title="VSN history plotter activity")
-        self._win_activation.resize(1400, 800)
+        self._win_activation.resize(1750, 1000)
 
         self._win_percentage = pg.GraphicsWindow(title="VSN history plotter percentage")
-        self._win_percentage.resize(1400, 800)
+        self._win_percentage.resize(1750, 1000)
 
         self._win_activation_binary = pg.GraphicsWindow(title="VSN history plotter activity")
-        self._win_activation_binary.resize(1400, 800)
+        self._win_activation_binary.resize(1750, 1000)
 
     def _load_data(self):
         self.cameras.load_cameras_data_from_files()
@@ -39,42 +39,45 @@ class VSNHistoryPlotter:
     def _add_graphs_activation_binary(self):
         for i in xrange(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
+            plot_title = "PiCam" + str(i+1).zfill(2)
             data = self.cameras.cameras[name]._activation_level_history
             activation_level_binary_history = []
             for value in data:
-                if value >= 10:
+                if value >= 15:
                     activation_level_binary_history.append(1)
                 else:
                     activation_level_binary_history.append(0)
 
-            if i % 2 == 0:
-                self._win_activation_binary.nextRow()
-            plot_title = "picam" + str(i+1).zfill(2)
-            cam_plot = self._win_activation_binary.addPlot(title=name)
-            curve = cam_plot.plot(pen='r')
-            cam_plot.setYRange(0, 1)
+            #if i % 2 == 0:
+            self._win_activation_binary.nextRow()
+            cam_plot = self._win_activation_binary.addPlot(title=plot_title)
+            curve = cam_plot.plot(pen=pg.mkPen('r', width=2))
+            cam_plot.setXRange(0, len(data))
+            cam_plot.setYRange(0, 2)
             curve.setData(activation_level_binary_history)
 
     def _add_graphs_activation(self):
         for i in xrange(0, len(self.cameras.cameras)):
-            if i % 2 == 0:
-                self._win_activation.nextRow()
-            plot_title = "picam" + str(i+1).zfill(2)
+            name = "picam" + str(i+1).zfill(2)
+            plot_title = "PiCam" + str(i+1).zfill(2)
+            #if i % 2 == 0:
+            self._win_activation.nextRow()
             cam_plot = self._win_activation.addPlot(title=plot_title)
             curve = cam_plot.plot(pen='r')
             cam_plot.setYRange(0, 100)
-            data = self.cameras.cameras[plot_title]._activation_level_history
+            data = self.cameras.cameras[name]._activation_level_history
             curve.setData(data)
 
     def _add_graphs_percentage(self):
         for i in xrange(0, len(self.cameras.cameras)):
-            if i % 2 == 0:
-                self._win_percentage.nextRow()
-            plot_title = "picam" + str(i+1).zfill(2)
+            name = "picam" + str(i+1).zfill(2)
+            plot_title = "PiCam" + str(i+1).zfill(2)
+            #if i % 2 == 0:
+            self._win_percentage.nextRow()
             cam_plot = self._win_percentage.addPlot(title=plot_title)
             curve = cam_plot.plot(pen='r')
             cam_plot.setYRange(0, 100)
-            data = self.cameras.cameras[plot_title]._percentage_of_active_pixels_history
+            data = self.cameras.cameras[name]._percentage_of_active_pixels_history
             curve.setData(data)
 
     def _print_power_mode(self):
