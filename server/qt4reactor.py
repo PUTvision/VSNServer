@@ -41,7 +41,7 @@ __all__ = ['install']
 
 import sys, time
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from PyQt4.QtCore import QSocketNotifier, QObject, SIGNAL, QTimer, QCoreApplication
 from PyQt4.QtCore import QEventLoop
@@ -115,13 +115,13 @@ class fakeApplication(QEventLoop):
         
     def exec_(self):
         QEventLoop.exec_(self)
-        
+
+
+@implementer(IReactorFDSet)
 class QTReactor(PosixReactorBase):
     """
     Qt based reactor.
     """
-    implements(IReactorFDSet)
-
     _timer = None
 
     def __init__(self):

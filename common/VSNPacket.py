@@ -72,7 +72,7 @@ class VSNPacketToClient:
         self.flag_send_image = flag_send_image
 
     def pack_to_send(self):
-        return self._s.pack(self.activation_neighbours, self.image_type, self.flag_send_image)
+        return self._s.pack(self.activation_neighbours, bytes(self.image_type, encoding='utf-8'), self.flag_send_image)
 
     def unpack_from_receive(self, string):
         self.activation_neighbours, self.image_type, self.flag_send_image = self._s.unpack(string)

@@ -1,7 +1,7 @@
 __author__ = 'Amin'
 
 from common.VSNPacket import IMAGE_TYPES
-from client.VSNActivityController import GainSampletimeTuple
+from common.VSNUtility import GainSampletimeTuple
 
 import pickle
 
@@ -54,7 +54,7 @@ class VSNCameraData:
         else:
             number_of_elements_to_append = 1
 
-        for i in xrange(0, number_of_elements_to_append):
+        for i in range(0, number_of_elements_to_append):
             self._activation_level_history.append(self.activation_level)
             self._percentage_of_active_pixels_history.append(self.percentage_of_active_pixels)
 
@@ -116,7 +116,7 @@ class VSNCameras:
         return camera_name
 
     def save_cameras_data_to_files(self):
-        for i in xrange(1, 6):
+        for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
             new_file = file(camera_name + ".txt", "w")
 
@@ -125,7 +125,7 @@ class VSNCameras:
             new_file.close()
 
     def load_cameras_data_from_files(self):
-        for i in xrange(1, 6):
+        for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
             new_file = file(camera_name + ".txt", "r")
 
@@ -134,7 +134,7 @@ class VSNCameras:
             new_file.close()
 
     def clear_cameras_data(self):
-        for i in xrange(1, 6):
+        for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
             self.cameras[camera_name].clear_history()
 
@@ -148,7 +148,7 @@ class VSNCameras:
     def _calculate_neighbour_activation_level(self, camera_name):
         # TODO: change it to check against the real number of cameras in the system
         self.cameras[camera_name].activation_neighbours = 0.0
-        for idx in xrange(0, len(self.cameras)-1):
+        for idx in range(0, len(self.cameras)-1):
             # idx+1 is used because cameras are numbered 1, 2, 3, 4, 5
             current_camera_name = "picam" + str(idx+1).zfill(2)
             self.cameras[camera_name].activation_neighbours += \
@@ -157,6 +157,6 @@ class VSNCameras:
         return self.cameras[camera_name].activation_neighbours
 
         #self._activation_neighbours[node_index] = 0
-        #for idx in xrange(0, 3):
+        #for idx in range(0, 3):
         #    self._activation_neighbours[node_index] += \
         #        dependency_table[node_name][idx] * self._graphsController._percentages[idx]

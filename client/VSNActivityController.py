@@ -2,18 +2,11 @@ __author__ = 'Amin'
 
 import math
 
-
-class GainSampletimeTuple:
-
-    def __init__(self, gain, sample_time):
-        self.gain = gain
-        self.sample_time = sample_time
+from common.VSNUtility import GainSampletimeTuple
 
 
 class VSNActivityController:
-
     def __init__(self):
-
         self._parameters_below_threshold = GainSampletimeTuple(2.0, 1.0)
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
         self._activation_level_threshold = 15.0
@@ -113,6 +106,6 @@ if __name__ == "__main__":
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels_)
         cv2.imshow('current frame', VSN_image_processor.get_image(IMAGE_TYPES.foreground))
-        print VSN_activity_controller.get_state_as_string()
+        print(VSN_activity_controller.get_state_as_string())
 
     cv2.destroyAllWindows()
