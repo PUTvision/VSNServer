@@ -1,6 +1,6 @@
 __author__ = 'Amin'
 
-from common.VSNPacket import IMAGE_TYPES
+from common.VSNPacket import ImageType
 from common.VSNUtility import GainSampletimeTuple
 
 import pickle
@@ -20,7 +20,7 @@ class VSNCameraData:
         self.ticks_in_normal_operation_mode = 0
         # camera parameters
         self.flag_send_image = False
-        self.image_type = IMAGE_TYPES.foreground
+        self.image_type = ImageType.foreground
         self._parameters_below_threshold = GainSampletimeTuple(2.0, 1.0)
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
         self._activation_level_threshold = 15.0

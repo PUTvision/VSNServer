@@ -28,17 +28,17 @@ class VSNImageProcessing:
         self._camera.resolution = (320, 240)
         self._camera.framerate = 10.0
 
-        print "Frame resolution set"
+        print("Frame resolution set")
 
         self._camera.start_preview()
         time.sleep(2)
         self._camera.capture(self._stream, format='jpeg')
 
-        print "Camera started"
+        print("Camera started")
 
         data = None
         # let the camera adjust the auto parameters (gain etc.) on a few images
-        for x in xrange(0, 15):
+        for x in range(0, 15):
             data = np.fromstring(self._stream.getvalue(), dtype=np.uint8)
         frame = cv2.imdecode(data, 1)
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         # main loop - 20 fps
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         cv2.imshow("current frame", VSN_image_processor.get_image(IMAGE_TYPES.foreground))
-        print "Percentage of of active pixels in the image: ", percentage_of_active_pixels_, "\r\n"
+        print("Percentage of of active pixels in the image: ", percentage_of_active_pixels_, "\r\n")
         key = cv2.waitKey(50)
 
     cv2.destroyAllWindows()

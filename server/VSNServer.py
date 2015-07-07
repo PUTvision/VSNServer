@@ -1,21 +1,23 @@
 __author__ = 'Amin'
 
+from enum import Enum
+
 from twisted.protocols import basic
 from twisted.internet import protocol
 
-from common.VSNUtility import enum
 from common.VSNPacket import VSNPacket
 
 
-RECEIVE_STATE = enum(packet_standard=1, packet_image=2)
+class ReceiveState(Enum):
+    packet_standard = 1
+    packet_image = 2
 
 
 class VSNServer(basic.Int32StringReceiver):
-
     def __init__(self):
         # parameters
         self._private_parameter = None
-        self._receive_state = RECEIVE_STATE.packet_standard
+        self._ReceiveState = ReceiveState.packet_standard
 
     # callbacks and functions to override
 
@@ -26,17 +28,17 @@ class VSNServer(basic.Int32StringReceiver):
         self.factory.client_connection_lost(self)
 
     def stringReceived(self, string):
-        if self._receive_state == RECEIVE_STATE.packet_standard:
+        if self._ReceiveState == ReceiveState.packet_standard:
             packet = VSNPacket()
             packet.unpack_from_receive(string)
             self.factory.client_packet_received(packet, self)
 
             if packet.flag_image_next:
-                self._receive_state = RECEIVE_STATE.packet_image
+                self._ReceiveState = ReceiveState.packet_image
 
         else:
             self.factory.client_image_received(string)
-            self._receive_state = RECEIVE_STATE.packet_standard
+            self._ReceiveState = ReceiveState.packet_standard
 
     # additional functions
 
@@ -46,7 +48,6 @@ class VSNServer(basic.Int32StringReceiver):
 
 
 class VSNServerFactory(protocol.Factory):
-
     protocol = VSNServer
 
     def __init__(

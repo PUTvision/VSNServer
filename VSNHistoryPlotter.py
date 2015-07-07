@@ -37,7 +37,7 @@ class VSNHistoryPlotter:
         self.cameras.load_cameras_data_from_files()
 
     def _add_graphs_activation_binary(self):
-        for i in xrange(0, len(self.cameras.cameras)):
+        for i in range(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
             plot_title = "PiCam" + str(i+1).zfill(2)
             data = self.cameras.cameras[name]._activation_level_history
@@ -52,12 +52,12 @@ class VSNHistoryPlotter:
             self._win_activation_binary.nextRow()
             cam_plot = self._win_activation_binary.addPlot(title=plot_title)
             curve = cam_plot.plot(pen=pg.mkPen('r', width=2))
-            cam_plot.setXRange(0, len(data))
+            cam_plot.setrange(0, len(data))
             cam_plot.setYRange(0, 2)
             curve.setData(activation_level_binary_history)
 
     def _add_graphs_activation(self):
-        for i in xrange(0, len(self.cameras.cameras)):
+        for i in range(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
             plot_title = "PiCam" + str(i+1).zfill(2)
             #if i % 2 == 0:
@@ -69,7 +69,7 @@ class VSNHistoryPlotter:
             curve.setData(data)
 
     def _add_graphs_percentage(self):
-        for i in xrange(0, len(self.cameras.cameras)):
+        for i in range(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
             plot_title = "PiCam" + str(i+1).zfill(2)
             #if i % 2 == 0:
@@ -81,16 +81,16 @@ class VSNHistoryPlotter:
             curve.setData(data)
 
     def _print_power_mode(self):
-        for i in xrange(0, len(self.cameras.cameras)):
+        for i in range(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
-            print name + \
+            print(name + \
                   ": " + \
                   "low power ticks: " + \
                   str(self.cameras.cameras[name].ticks_in_low_power_mode) + \
                   ", " + \
                   "normal operation ticks: " + \
                   str(self.cameras.cameras[name].ticks_in_normal_operation_mode) + \
-                  "\r\n"
+                  "\r\n")
 
 
 if __name__ == "__main__":

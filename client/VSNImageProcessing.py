@@ -1,13 +1,11 @@
 __author__ = 'Amin'
 
 import cv2
-import cv2.cv as cv
 
-from common.VSNPacket import IMAGE_TYPES
+from common.VSNPacket import ImageType
 
 
 class VSNImageProcessing:
-
     def __init__(self, video_capture_number=0):
         self._capture = None
         self._structing_element = None
@@ -19,18 +17,18 @@ class VSNImageProcessing:
 
     def _init_camera(self, video_capture_number):
         self._capture = cv2.VideoCapture(video_capture_number)
-        self._capture.set(cv.CV_CAP_PROP_FRAME_WIDTH, 320)
-        self._capture.set(cv.CV_CAP_PROP_FRAME_HEIGHT, 240)
+        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
-        print "Frame resolution set to: (" +\
-              str(self._capture.get(cv.CV_CAP_PROP_FRAME_WIDTH)) + \
-              "; " + \
-              str(self._capture.get(cv.CV_CAP_PROP_FRAME_HEIGHT)) + \
-              ")"
+        print("Frame resolution set to: (" +
+              str(self._capture.get(cv2.CAP_PROP_FRAME_WIDTH)) +
+              "; " +
+              str(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT)) +
+              ")")
 
         frame = None
         # let the camera adjust the auto parameters (gain etc.) on a few images
-        for x in xrange(0, 15):
+        for x in range(0, 15):
             ret, frame = self._capture.read()
         # init all the images with last of the acquired frame
         self._background_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -39,10 +37,11 @@ class VSNImageProcessing:
 
         self._structing_element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
-    def get_image(self, image_type):
-        if image_type == IMAGE_TYPES.foreground:
+    def get_image(self, image_type: bytes):
+        image_type = image_type.decode('utf-8')
+        if image_type == ImageType.foreground.value:
             image = self._foreground_image
-        elif image_type == IMAGE_TYPES.background:
+        elif image_type == ImageType.background.value:
             image = self._background_image
         else:
             image = self._difference_thresholded_image
@@ -85,7 +84,7 @@ class VSNImageProcessing:
 
     # helper function used to flush the camera buffer
     def grab_images(self, number_of_images_to_grab):
-        for i in xrange(0, number_of_images_to_grab):
+        for i in range(0, number_of_images_to_grab):
             self._capture.read()
             cv2.waitKey(20)
 
@@ -97,8 +96,8 @@ if __name__ == "__main__":
     while key != 27:    # exit on ESC
         # main loop - 20 fps
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
-        cv2.imshow("current frame", VSN_image_processor.get_image(IMAGE_TYPES.foreground))
-        print "Percentage of of active pixels in the image: ", percentage_of_active_pixels_, "\r\n"
+        cv2.imshow("current frame", VSN_image_processor.get_image(ImageType.foreground))
+        print("Percentage of of active pixels in the image: ", percentage_of_active_pixels_, "\r\n")
         key = cv2.waitKey(50)
 
     cv2.destroyAllWindows()

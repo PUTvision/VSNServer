@@ -2,7 +2,7 @@ __author__ = 'Amin'
 
 import struct
 
-from common.VSNUtility import enum
+from enum import Enum
 
 # Definitions of DTOs - Data Transfer Objects used for moving data
 # from the network stream to higher level of processing
@@ -10,8 +10,10 @@ from common.VSNUtility import enum
 # TODO: convert this classes to simple struct like objects ...
 # TODO: ... and offer methods that invoke appropriate action based on the data provided (Clean Code chapter 6)
 
-IMAGE_TYPES = enum(foreground='fg', background='bg', difference='df')
-
+class ImageType(Enum):
+    foreground = 'fg'
+    background = 'bg'
+    difference = 'df'
 
 # struct usage:
 # https://docs.python.org/2/library/struct.html
@@ -63,7 +65,7 @@ class VSNPacketToClient:
         self._s = struct.Struct(self._struct_format)
 
         self.activation_neighbours = 0.0
-        self.image_type = IMAGE_TYPES.foreground
+        self.image_type = ImageType.foreground
         self.flag_send_image = False
 
     def set(self, activation_neighbours, image_type, flag_send_image):
@@ -72,10 +74,12 @@ class VSNPacketToClient:
         self.flag_send_image = flag_send_image
 
     def pack_to_send(self):
-        return self._s.pack(self.activation_neighbours, bytes(self.image_type, encoding='utf-8'), self.flag_send_image)
+        return self._s.pack(self.activation_neighbours, bytes(self.image_type.value, encoding='utf-8'),
+                            self.flag_send_image)
 
     def unpack_from_receive(self, string):
         self.activation_neighbours, self.image_type, self.flag_send_image = self._s.unpack(string)
+        print(self.image_type)
 
 
 class VSNPacketToClientParameters:
@@ -84,7 +88,7 @@ class VSNPacketToClientParameters:
         self._prefixLength = struct.calcsize(self._struct_format)
         self._s = struct.Struct(self._struct_format)
 
-        self.image_type = IMAGE_TYPES.foreground
+        self.image_type = ImageType.foreground
         self.flag_send_image = False
         self.threshold = 10.0
         self.gain_below_threshold = 2.0

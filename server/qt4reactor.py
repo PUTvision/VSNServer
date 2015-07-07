@@ -66,13 +66,11 @@ class TwistedSocketNotifier(QSocketNotifier):
             self.fn = self.write
         QObject.connect(self, SIGNAL("activated(int)"), self.fn)
 
-
     def shutdown(self):
         QObject.disconnect(self, SIGNAL("activated(int)"), self.fn)
         self.setEnabled(False)
         self.fn = self.watcher = None
         self.deleteLater()
-
 
     def read(self, sock):
         w = self.watcher
@@ -95,6 +93,7 @@ class TwistedSocketNotifier(QSocketNotifier):
     def write(self, sock):
         w = self.watcher
         self.setEnabled(False)
+
         def _write():
             why = None
             try:
@@ -106,6 +105,7 @@ class TwistedSocketNotifier(QSocketNotifier):
                 self.reactor._disconnectSelectable(w, why, False)
             elif self.watcher:
                 self.setEnabled(True)
+
         log.callWithLogger(w, _write)
         self.reactor.reactorInvocation()
 
@@ -115,7 +115,6 @@ class fakeApplication(QEventLoop):
         
     def exec_(self):
         QEventLoop.exec_(self)
-
 
 @implementer(IReactorFDSet)
 class QTReactor(PosixReactorBase):
@@ -148,12 +147,10 @@ class QTReactor(PosixReactorBase):
             self._reads[reader] = TwistedSocketNotifier(self, reader,
                                                        QSocketNotifier.Read)
 
-
     def addWriter(self, writer):
         if not writer in self._writes:
             self._writes[writer] = TwistedSocketNotifier(self, writer,
                                                         QSocketNotifier.Write)
-
 
     def removeReader(self, reader):
         if reader in self._reads:
@@ -167,14 +164,11 @@ class QTReactor(PosixReactorBase):
             #del self._writes[writer]
             self._writes.pop(writer)
 
-
     def removeAll(self):
         return self._removeAll(self._reads, self._writes)
 
-
     def getReaders(self):
         return self._reads.keys()
-
 
     def getWriters(self):
         return self._writes.keys()
@@ -243,7 +237,7 @@ class QTReactor(PosixReactorBase):
                 
     def doIteration(self):
         assert False, "doiteration is invalid call"
-            
+
 def install():
     """
     Configure the twisted mainloop to be run inside the qt mainloop.

@@ -21,7 +21,7 @@ import cv2
 from server import qt4reactor
 from server.VSNServer import VSNServerFactory
 from common.VSNPacket import VSNPacketToClient
-from common.VSNPacket import IMAGE_TYPES
+from common.VSNPacket import ImageType
 from server.VSNGraph import VSNGraphController
 from server.VSNCamerasData import VSNCameras
 
@@ -230,7 +230,7 @@ class SampleGUIServerWindow(QMainWindow):
     def on_doit(self):
         # tests
         #packet_to_client = VSNPacketToClient()
-        #packet_to_client.set(4.5, IMAGE_TYPES.background, False)
+        #packet_to_client.set(4.5, ImageType.background, False)
         #self.server.send_packet_to_all_clients(packet_to_client)
 
         # test for adding new row to the graph window
@@ -261,7 +261,7 @@ class SampleGUIServerWindow(QMainWindow):
     def on_client_image_received(self, image_as_string):
         data = np.fromstring(image_as_string, dtype='uint8')
         #decode jpg image to numpy array and display
-        decimg = cv2.imdecode(data, cv2.CV_LOAD_IMAGE_GRAYSCALE)
+        decimg = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
 
         qi = QtGui.QImage(decimg, 320, 240, QtGui.QImage.Format_Indexed8)
         self.label_image.setPixmap(QtGui.QPixmap.fromImage(qi))
@@ -272,8 +272,8 @@ class SampleGUIServerWindow(QMainWindow):
         packet_to_send = VSNPacketToClient()
         packet_to_send.set(
             activation_neighbours,
-            #IMAGE_TYPES.difference,
-            IMAGE_TYPES.foreground,
+            #ImageType.difference,
+            ImageType.foreground,
             self._cameras.get_flag_send_image(camera_number)
         )
         client.send_packet(packet_to_send)

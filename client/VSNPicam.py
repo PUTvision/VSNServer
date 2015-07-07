@@ -12,16 +12,15 @@ from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import VSNPacket
 
 from client.VSNClient import VSNClientFactory
-from common.VSNPacket import IMAGE_TYPES
+from common.VSNPacket import ImageType
 
 
 class VSNPicam:
-
     def __init__(self, camera_name=None, video_capture_number=0):
         self._node_name = camera_name
         self._node_number = 3
         self._flag_send_image = False           # default behavior - do not send the image data
-        self._image_type = IMAGE_TYPES.foreground
+        self._image_type = ImageType.foreground
 
         self._prepare_camera_name_and_number()
 
@@ -49,7 +48,7 @@ class VSNPicam:
             if self._node_name[5:7].isdigit():
                 self._node_number = int(self._node_name[5:7])
 
-        print "Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name
+        print("Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name)
 
     def _do_regular_update(self):
         # queue the next call to itself
@@ -69,7 +68,7 @@ class VSNPicam:
 
         #self._flush_image_buffer_when_going_low_power()
 
-        print self._activity_controller.get_state_as_string() + "\r\n"
+        print(self._activity_controller.get_state_as_string() + "\r\n")
 
         self._packet_to_send.set(
             self._node_number,
@@ -105,7 +104,7 @@ class VSNPicam:
         return image_as_string
 
     def _packet_received_callback(self, packet):
-        print "Received packet: ", packet.activation_neighbours, ", ", packet.image_type, ", ", packet.flag_send_image
+        print("Received packet: ", packet.activation_neighbours, ", ", packet.image_type, ", ", packet.flag_send_image)
         self._activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )

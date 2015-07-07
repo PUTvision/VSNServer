@@ -15,11 +15,11 @@ class VSNClient(basic.Int32StringReceiver):
     # callbacks and functions to override
 
     def connectionMade(self):
-        print "Connected to server"
+        print("Connected to server")
         self.factory.client_connected(self)
 
     def connectionLost(self, reason):
-        print "Disconnected from server" + str(reason)
+        print("Disconnected from server" + str(reason))
         self.factory.client_disconnected()
 
     def stringReceived(self, string):
@@ -38,7 +38,6 @@ class VSNClient(basic.Int32StringReceiver):
 
 
 class VSNClientFactory(protocol.ClientFactory):
-
     protocol = VSNClient
     # above line is equal to
     #def buildProtocol(self, addr):
@@ -51,11 +50,11 @@ class VSNClientFactory(protocol.ClientFactory):
         self._packet_received_callback = packet_received_callback
 
     def clientConnectionLost(self, connector, reason):
-        print "Disconnected, trying to reconnect"
+        print("Disconnected, trying to reconnect")
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        print "Connection failed:", reason
+        print("Connection failed:", reason)
         reactor.stop()
 
     def client_connected(self, client):
@@ -85,10 +84,10 @@ def send_packet(packet):
 
 
 def packet_receive_callback(packet):
-    print "Received packet: " + \
-          str(packet.activation_neighbours) + ", " + \
-          str(packet.image_type) + ", " + \
-          str(packet.flag_send_image) + "\r\n"
+    print("Received packet: " +
+          str(packet.activation_neighbours) + ", " +
+          str(packet.image_type) + ", " +
+          str(packet.flag_send_image) + "\r\n")
 
 if __name__ == '__main__':
     SERVER_IP = '127.0.0.1'
