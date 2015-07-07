@@ -5,6 +5,7 @@ from twisted.internet import reactor
 import socket
 import cv2
 import numpy
+import time
 
 from client.VSNImageProcessing import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
@@ -54,11 +55,17 @@ class VSNPicam:
         # queue the next call to itself
         reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
 
+        time_start = time.clock()
+
         if self._activity_controller.is_activation_below_threshold():
             self._image_processor.grab_images(5)
 
+        time_after_grab = time.clock()
+
         percentage_of_active_pixels = self._image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         self._activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
+
+        time_after_get_percentage = time.clock()
 
         #self._flush_image_buffer_when_going_low_power()
 
@@ -72,9 +79,18 @@ class VSNPicam:
         )
         self._client_factory.send_packet(self._packet_to_send)
 
+        time_after_sending_packet = time.clock()
+
         if self._flag_send_image:
             image_as_string = self._encode_image_for_sending()
             self._client_factory.send_image(image_as_string)
+
+        time_after_encoding = time.clock()
+
+        print('Grabbing 5 images took: %.2f ms'% ((time_after_grab - time_start) * 1000))
+        print('Calculating percentage took: %.2f ms'% ((time_after_get_percentage - time_after_grab) * 1000))
+        print('Sending packet took: %.2f ms'% ((time_after_sending_packet - time_after_grab) * 1000))
+        print('Encoding took: %.2f ms'% ((time_after_encoding - time_after_sending_packet) * 1000))
 
     def _flush_image_buffer_when_going_low_power(self):
         if self._activity_controller.is_activation_below_threshold():
