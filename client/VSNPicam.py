@@ -19,7 +19,7 @@ class VSNPicam:
     def __init__(self, camera_name=None, video_capture_number=0):
         self._node_name = camera_name
         self._node_number = 3
-        self._flag_send_image = False           # default behavior - do not send the image data
+        self._flag_send_image = False  # default behavior - do not send the image data
         self._image_type = ImageType.foreground
 
         self._prepare_camera_name_and_number()
@@ -113,6 +113,7 @@ class VSNPicam:
         reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
 
         reactor.run()
+
 
 if __name__ == '__main__':
     # the object can be created by specifying its name:

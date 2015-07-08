@@ -8,7 +8,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from pyqtgraph.Qt import QtGui, QtCore
 
-
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -57,10 +56,10 @@ class SampleGUIServerWindow(QMainWindow):
 
     def create_server(self):
         self.server = VSNServerFactory(
-                        self.on_client_connection_made,
-                        self.on_client_connection_lost,
-                        self.on_client_data_received,
-                        self.on_client_image_received
+            self.on_client_connection_made,
+            self.on_client_connection_lost,
+            self.on_client_data_received,
+            self.on_client_image_received
         )
         self.log('Connecting...')
         # When the connection is made, self.client calls the on_client_connect
@@ -90,7 +89,7 @@ class SampleGUIServerWindow(QMainWindow):
                    'picam03',
                    'picam04',
                    'picam05'
-        ]
+                   ]
         self.combo_box_cameras = QComboBox()
         self.combo_box_cameras.addItems(cameras)
 
@@ -162,7 +161,7 @@ class SampleGUIServerWindow(QMainWindow):
     def _update_status_monitor(self, camera_number):
         camera_name, \
         active_pixels, \
-        activation_level,\
+        activation_level, \
         neighbours, \
         gain, \
         sample_time, \
@@ -185,12 +184,12 @@ class SampleGUIServerWindow(QMainWindow):
 
     def on_doit(self):
         # tests
-        #packet_to_client = VSNPacketToClient()
-        #packet_to_client.set(4.5, ImageType.background, False)
-        #self.server.send_packet_to_all_clients(packet_to_client)
+        # packet_to_client = VSNPacketToClient()
+        # packet_to_client.set(4.5, ImageType.background, False)
+        # self.server.send_packet_to_all_clients(packet_to_client)
 
         # test for adding new row to the graph window
-        #self._graphsController.add_new_graph()
+        # self._graphsController.add_new_graph()
 
         self._cameras.save_cameras_data_to_files()
 
@@ -247,11 +246,13 @@ class SampleGUIServerWindow(QMainWindow):
     def closeEvent(self, e):
         self.reactor.stop()
 
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     qt4reactor.install()
 
     from twisted.internet import reactor
+
     main_window = SampleGUIServerWindow(reactor)
     main_window.show()
 

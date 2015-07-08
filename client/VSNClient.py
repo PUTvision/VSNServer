@@ -87,6 +87,7 @@ def packet_receive_callback(packet):
           str(packet.image_type) + ", " +
           str(packet.flag_send_image) + "\r\n")
 
+
 if __name__ == '__main__':
     SERVER_IP = '127.0.0.1'
     SERVER_PORT = 50001

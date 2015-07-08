@@ -14,7 +14,7 @@ class VSNCameraData:
         self.percentage_of_active_pixels = 0.0
         self._percentage_of_active_pixels_history = []
         # data to camera that is calculated periodically
-        self.activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
+        self.activation_neighbours = 0.0  # weighted activity of neighbouring nodes
         # internal counters of camera state
         self.ticks_in_low_power_mode = 0
         self.ticks_in_normal_operation_mode = 0
@@ -24,9 +24,21 @@ class VSNCameraData:
         self._parameters_below_threshold = GainSampletimeTuple(2.0, 1.0)
         self._parameters_above_threshold = GainSampletimeTuple(0.1, 0.1)
         self._activation_level_threshold = 15.0
-        self._parameters = self._parameters_below_threshold         # sample time and gain at startup
+        self._parameters = self._parameters_below_threshold  # sample time and gain at startup
         # flag indicating that parameters should be send to camera
         self.flag_parameters_changed = True
+
+    @property
+    def activation_level_history(self):
+        return self._activation_level_history
+
+    @property
+    def percentage_of_active_pixels_history(self):
+        return self._percentage_of_active_pixels_history
+
+    @property
+    def parameters(self):
+        return self._parameters
 
     def clear_history(self):
         self._activation_level_history = []
@@ -101,8 +113,8 @@ class VSNCameras:
                 self.cameras[camera_name].percentage_of_active_pixels,
                 self.cameras[camera_name].activation_level,
                 self.cameras[camera_name].activation_neighbours,
-                self.cameras[camera_name]._parameters.gain,
-                self.cameras[camera_name]._parameters.sample_time,
+                self.cameras[camera_name].parameters.gain,
+                self.cameras[camera_name].parameters.sample_time,
                 self.cameras[camera_name].ticks_in_low_power_mode,
                 self.cameras[camera_name].ticks_in_normal_operation_mode
                 )
@@ -142,15 +154,15 @@ class VSNCameras:
     def _calculate_neighbour_activation_level(self, camera_name):
         # TODO: change it to check against the real number of cameras in the system
         self.cameras[camera_name].activation_neighbours = 0.0
-        for idx in range(0, len(self.cameras)-1):
+        for idx in range(0, len(self.cameras) - 1):
             # idx+1 is used because cameras are numbered 1, 2, 3, 4, 5
-            current_camera_name = "picam" + str(idx+1).zfill(2)
+            current_camera_name = "picam" + str(idx + 1).zfill(2)
             self.cameras[camera_name].activation_neighbours += \
                 self._dependency_table[camera_name][idx] * self.cameras[current_camera_name].percentage_of_active_pixels
 
         return self.cameras[camera_name].activation_neighbours
 
-        #self._activation_neighbours[node_index] = 0
-        #for idx in range(0, 3):
+        # self._activation_neighbours[node_index] = 0
+        # for idx in range(0, 3):
         #    self._activation_neighbours[node_index] += \
         #        dependency_table[node_name][idx] * self._graphsController._percentages[idx]

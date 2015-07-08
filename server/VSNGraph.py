@@ -50,7 +50,7 @@ class VSNGraph:
         self.plot_title = "picam" + str(camera_number)
 
         self.white_pixels_percentage = np.zeros(1)
-        #self.neighbouring_node_activation_level = 0.0
+        # self.neighbouring_node_activation_level = 0.0
         self.activation_level_history = np.zeros(200)
 
         # graph elements
@@ -58,12 +58,12 @@ class VSNGraph:
         self._bar = None
 
     def add_graph(self, window):
-        #setup plot
+        # setup plot
         cam_plot = window.addPlot(title=self.plot_title)
         self._curve = cam_plot.plot(pen='r')
         self._bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
         cam_plot.addItem(self._bar)
-        #set the scale of the plot
+        # set the scale of the plot
         cam_plot.setYRange(0, 200)
 
     def update_graph(self, activation_level, white_pixels_percentage):

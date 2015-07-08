@@ -115,7 +115,7 @@ if __name__ == "__main__":
     VSN_image_processor = VSNImageProcessing()
 
     key = 0
-    while key != 27:    # exit on ESC
+    while key != 27:  # exit on ESC
         # main loop - 20 fps
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         cv2.imshow("current frame", VSN_image_processor.get_image(ImageType.foreground))

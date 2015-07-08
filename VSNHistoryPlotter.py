@@ -40,7 +40,7 @@ class VSNHistoryPlotter:
         for i in range(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
             plot_title = "PiCam" + str(i+1).zfill(2)
-            data = self.cameras.cameras[name]._activation_level_history
+            data = self.cameras.cameras[name].activation_level_history
             activation_level_binary_history = []
             for value in data:
                 if value >= 15:
@@ -65,7 +65,7 @@ class VSNHistoryPlotter:
             cam_plot = self._win_activation.addPlot(title=plot_title)
             curve = cam_plot.plot(pen='r')
             cam_plot.setYRange(0, 100)
-            data = self.cameras.cameras[name]._activation_level_history
+            data = self.cameras.cameras[name].activation_level_history
             curve.setData(data)
 
     def _add_graphs_percentage(self):
@@ -77,19 +77,19 @@ class VSNHistoryPlotter:
             cam_plot = self._win_percentage.addPlot(title=plot_title)
             curve = cam_plot.plot(pen='r')
             cam_plot.setYRange(0, 100)
-            data = self.cameras.cameras[name]._percentage_of_active_pixels_history
+            data = self.cameras.cameras[name].percentage_of_active_pixels_history
             curve.setData(data)
 
     def _print_power_mode(self):
         for i in range(0, len(self.cameras.cameras)):
             name = "picam" + str(i+1).zfill(2)
-            print(name + \
-                  ": " + \
-                  "low power ticks: " + \
-                  str(self.cameras.cameras[name].ticks_in_low_power_mode) + \
-                  ", " + \
-                  "normal operation ticks: " + \
-                  str(self.cameras.cameras[name].ticks_in_normal_operation_mode) + \
+            print(name +
+                  ": " +
+                  "low power ticks: " +
+                  str(self.cameras.cameras[name].ticks_in_low_power_mode) +
+                  ", " +
+                  "normal operation ticks: " +
+                  str(self.cameras.cameras[name].ticks_in_normal_operation_mode) +
                   "\r\n")
 
 

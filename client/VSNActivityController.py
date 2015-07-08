@@ -12,10 +12,10 @@ class VSNActivityController:
         self._activation_level_threshold = 15.0
 
         self._percentage_of_active_pixels = 0.0
-        self._activation_level = 0.0                                # default starting activation level
+        self._activation_level = 0.0  # default starting activation level
         self._activation_level_d = 0.0
-        self._parameters = self._parameters_below_threshold         # sample time and gain at startup
-        self._activation_neighbours = 0.0                           # weighted activity of neighbouring nodes
+        self._parameters = self._parameters_below_threshold  # sample time and gain at startup
+        self._activation_neighbours = 0.0  # weighted activity of neighbouring nodes
 
     # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
     def _lowpass(self, prev_state, input_data, gain):
@@ -70,7 +70,7 @@ class VSNActivityController:
             self._activation_level_d,
             1.0
         )
-        #self._activation_level = activation_level_updated + self._activation_neighbours
+        # self._activation_level = activation_level_updated + self._activation_neighbours
         self._activation_level = activation_level_updated
 
         # update sampling time and gain based on current activity level
@@ -100,9 +100,9 @@ if __name__ == "__main__":
     VSN_image_processor = VSNImageProcessing()
 
     key = 0
-    while key != 27:    # exit on ESC
+    while key != 27:  # exit on ESC
         # main loop
-        key = cv2.waitKey(int(VSN_activity_controller.get_sample_time()*1000))
+        key = cv2.waitKey(int(VSN_activity_controller.get_sample_time() * 1000))
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels_)
         cv2.imshow('current frame', VSN_image_processor.get_image(ImageType.foreground))
