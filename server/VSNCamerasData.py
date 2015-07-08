@@ -118,20 +118,14 @@ class VSNCameras:
     def save_cameras_data_to_files(self):
         for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
-            new_file = file(camera_name + ".txt", "w")
-
-            pickle.dump(self.cameras[camera_name], new_file)
-
-            new_file.close()
+            with open(camera_name + ".txt", "wb") as file:
+                pickle.dump(self.cameras[camera_name], file)
 
     def load_cameras_data_from_files(self):
         for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
-            new_file = file(camera_name + ".txt", "r")
-
-            self.cameras[camera_name] = pickle.load(new_file)
-
-            new_file.close()
+            with(camera_name + ".txt", "rb") as file:
+                self.cameras[camera_name] = pickle.load(file)
 
     def clear_cameras_data(self):
         for i in range(1, 6):

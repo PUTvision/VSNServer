@@ -26,40 +26,6 @@ from server.VSNGraph import VSNGraphController
 from server.VSNCamerasData import VSNCameras
 
 
-class CircleWidget(QWidget):
-    def __init__(self, parent=None):
-        super(CircleWidget, self).__init__(parent)
-        self.nframe = 0
-        self.setBackgroundRole(QPalette.Base)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-    def minimumSizeHint(self):
-        return QSize(50, 50)
-
-    def sizeHint(self):
-        return QSize(180, 180)
-
-    def next(self):
-        self.nframe += 1
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.translate(self.width() / 2, self.height() / 2)
-
-        for diameter in range(0, 64, 9):
-            delta = abs((self.nframe % 64) - diameter / 2)
-            alpha = 255 - (delta * delta) / 4 - diameter
-            if alpha > 0:
-                painter.setPen(QPen(QColor(0, diameter / 2, 127, alpha), 3))
-                painter.drawEllipse(QRectF(
-                    -diameter / 2.0,
-                    -diameter / 2.0,
-                    diameter,
-                    diameter))
-
-
 class LogWidget(QTextBrowser):
     def __init__(self, parent=None):
         super(LogWidget, self).__init__(parent)
@@ -85,7 +51,6 @@ class SampleGUIServerWindow(QMainWindow):
 
         self.create_main_frame()
         self.create_server()
-        self.create_timer()
         self.create_graphs()
 
         self._cameras = VSNCameras()
@@ -105,10 +70,6 @@ class SampleGUIServerWindow(QMainWindow):
         endpoint.listen(self.server)
 
     def create_main_frame(self):
-        # unused elements
-        self.circle_widget = CircleWidget()
-        #hbox_row_2.addWidget(self.circle_widget)
-
         # first row
         hbox_row_1 = QHBoxLayout()
 
@@ -160,11 +121,6 @@ class SampleGUIServerWindow(QMainWindow):
 
         self.setCentralWidget(main_frame)
 
-    def create_timer(self):
-        self.circle_timer = QTimer(self)
-        self.circle_timer.timeout.connect(self.circle_widget.next)
-        self.circle_timer.start(25)
-
     def create_graphs(self):
         self._graphsController = VSNGraphController()
         self._graphsController.create_graph_window()
@@ -194,7 +150,7 @@ class SampleGUIServerWindow(QMainWindow):
                                          )
         vbox.addWidget(label_description)
 
-        for i in xrange(1, 6):
+        for i in range(1, 6):
             picam_name = "picam" + str(i).zfill(2)
             self._picam_labels[picam_name] = QtGui.QLabel()
             self._picam_labels[picam_name].setText(picam_name + ": ")
