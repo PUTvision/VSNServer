@@ -80,14 +80,14 @@ class VSNActivityController:
             self._parameters = self._parameters_above_threshold
 
     def get_state_as_string(self):
-        return "Params: \r\n" + \
-               "% of active pixels: " + \
+        return 'Params: \r\n' + \
+               '% of active pixels: ' + \
                str(self._percentage_of_active_pixels) + \
-               ", activation level: " + \
+               ', activation level: ' + \
                str(self._activation_level) + \
-               ", gain: " + \
+               ', gain: ' + \
                str(self._parameters.gain) + \
-               ", sample time: " + \
+               ', sample time: ' + \
                str(self._parameters.sample_time)
 
 
@@ -95,7 +95,7 @@ from common.VSNPacket import ImageType
 from client.VSNImageProcessing import VSNImageProcessing
 import cv2
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     VSN_activity_controller = VSNActivityController()
     VSN_image_processor = VSNImageProcessing()
 

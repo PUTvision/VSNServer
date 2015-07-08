@@ -64,10 +64,10 @@ class TwistedSocketNotifier(QSocketNotifier):
             self.fn = self.read
         elif type == QSocketNotifier.Write:
             self.fn = self.write
-        QObject.connect(self, SIGNAL("activated(int)"), self.fn)
+        QObject.connect(self, SIGNAL('activated(int)'), self.fn)
 
     def shutdown(self):
-        QObject.disconnect(self, SIGNAL("activated(int)"), self.fn)
+        QObject.disconnect(self, SIGNAL('activated(int)'), self.fn)
         self.setEnabled(False)
         self.fn = self.watcher = None
         self.deleteLater()
@@ -208,7 +208,7 @@ class QTReactor(PosixReactorBase):
         self._readWriteQ.append(t)
 
     def runReturn(self, installSignalHandlers=True):
-        QObject.connect(self._timer, SIGNAL("timeout()"),
+        QObject.connect(self._timer, SIGNAL('timeout()'),
                         self.reactorInvokePrivate)
         self.startRunning(installSignalHandlers=installSignalHandlers)
         self._timer.start(0)
@@ -242,7 +242,7 @@ class QTReactor(PosixReactorBase):
         self._timer.start()
 
     def doIteration(self):
-        assert False, "doiteration is invalid call"
+        assert False, 'doiteration is invalid call'
 
 
 def install():

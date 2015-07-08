@@ -18,7 +18,7 @@ class VSNGraphController:
         # set default background color to white
         pg.setConfigOption('background', 'w')
         # open the plot window, set properties
-        self._win = pg.GraphicsWindow(title="VSN activity monitor")
+        self._win = pg.GraphicsWindow(title='VSN activity monitor')
         self._win.resize(1400, 800)
 
         for i, graph in enumerate(self._graphs):
@@ -47,7 +47,7 @@ class VSNGraphController:
 
 class VSNGraph:
     def __init__(self, camera_number):
-        self.plot_title = "picam" + str(camera_number)
+        self.plot_title = 'picam' + str(camera_number)
 
         self.white_pixels_percentage = np.zeros(1)
         # self.neighbouring_node_activation_level = 0.0

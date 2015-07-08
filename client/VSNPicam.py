@@ -40,11 +40,11 @@ class VSNPicam:
 
         if self._node_name is None:
             self._node_name = socket.gethostname()
-        if len(self._node_name) == 7 and self._node_name[0:5] == "picam":
+        if len(self._node_name) == 7 and self._node_name[0:5] == 'picam':
             if self._node_name[5:7].isdigit():
                 self._node_number = int(self._node_name[5:7])
 
-        print("Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name)
+        print('Node number: ', self._node_number, '\r\n', 'Node name: ', self._node_name)
 
     def _do_regular_update(self):
         current_time = time.perf_counter()
@@ -100,14 +100,14 @@ class VSNPicam:
         return image_as_string
 
     def _packet_received_callback(self, packet):
-        print("Received packet: ", packet.activation_neighbours, ", ", packet.image_type, ", ", packet.flag_send_image)
+        print('Received packet: ', packet.activation_neighbours, ', ', packet.image_type, ', ', packet.flag_send_image)
         self._activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )
         self._flag_send_image = packet.flag_send_image
         self._image_type = packet.image_type
 
-    def start(self, server_ip="127.0.0.1", server_port=50001):
+    def start(self, server_ip='127.0.0.1', server_port=50001):
         # connect factory to this host and port
         reactor.connectTCP(server_ip, server_port, self._client_factory)
         reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
@@ -117,7 +117,7 @@ class VSNPicam:
 
 if __name__ == '__main__':
     # the object can be created by specifying its name:
-    # picam = VSNPicam("picam01", 0)
+    # picam = VSNPicam('picam01', 0)
     # or by letting it get its name with gethostname function
     # if it is in picamXY format it will be accepted
     # otherwise picam03 name will be used

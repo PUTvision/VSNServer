@@ -20,11 +20,11 @@ class VSNImageProcessing:
         self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
         self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
-        print("Frame resolution set to: (" +
+        print('Frame resolution set to: (' +
               str(self._capture.get(cv2.CAP_PROP_FRAME_WIDTH)) +
-              "; " +
+              '; ' +
               str(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT)) +
-              ")")
+              ')')
 
         frame = None
         # let the camera adjust the auto parameters (gain etc.) on a few images
@@ -89,15 +89,15 @@ class VSNImageProcessing:
             cv2.waitKey(20)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     VSN_image_processor = VSNImageProcessing()
 
     key = 0
     while key != 27:  # exit on ESC
         # main loop - 20 fps
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
-        cv2.imshow("current frame", VSN_image_processor.get_image(ImageType.foreground))
-        print("Percentage of of active pixels in the image: ", percentage_of_active_pixels_, "\r\n")
+        cv2.imshow('current frame', VSN_image_processor.get_image(ImageType.foreground))
+        print('Percentage of of active pixels in the image: ', percentage_of_active_pixels_, '\r\n')
         key = cv2.waitKey(50)
 
     cv2.destroyAllWindows()
