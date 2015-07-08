@@ -1,76 +1,90 @@
 __author__ = 'Amin'
 
 import cv2
-import cv2.cv as cv
 
-from common.VSNPacket import IMAGE_TYPES
+from threading import Thread
+from common.VSNPacket import ImageType
 
 import picamera
+import picamera.array
 import io
 import numpy as np
 import time
 
 
 class VSNImageProcessing:
-
-    def __init__(self):
+    def __init__(self, _):
         self._camera = None
-        self._stream = io.BytesIO()
         self._structing_element = None
         self._difference_thresholded_image = None
         self._background_image = None
         self._foreground_image = None
 
         self._init_camera()
+        self._stream = picamera.array.PiRGBArray(self._camera, size=(320, 240))
+        self._current_frame = None
+        self._current_capture_thread = None
+
+        self._grab_new_image_in_opencv_format()
 
     def _init_camera(self):
         self._camera = picamera.PiCamera()
         self._camera.resolution = (320, 240)
-        self._camera.framerate = 10.0
+        self._camera.framerate = 20
 
         print("Frame resolution set")
 
         self._camera.start_preview()
+        # let the camera adjust the auto parameters (gain etc.) on a few images
         time.sleep(2)
-        self._camera.capture(self._stream, format='jpeg')
+        stream = io.BytesIO()
+        self._camera.capture(stream, format='jpeg', use_video_port=True)
 
         print("Camera started")
 
-        data = None
-        # let the camera adjust the auto parameters (gain etc.) on a few images
-        for x in range(0, 15):
-            data = np.fromstring(self._stream.getvalue(), dtype=np.uint8)
+        data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         frame = cv2.imdecode(data, 1)
 
         # init all the images with last of the acquired frame
         self._background_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         self._foreground_image = self._background_image
-        self._difference_image = self._background_image
+        self._difference_thresholded_image = self._background_image
 
         self._structing_element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
+    def grab_images(self, _):
+        pass
+
     def _grab_new_image_in_opencv_format(self):
-        self._camera.capture(self._stream, format="jpeg")
-        data = np.fromstring(self._stream.getvalue(), dtype=np.uint8)
-        frame = cv2.imdecode(data, 1)
+        self._stream.truncate(0)
+        self._camera.capture(self._stream, format='bgr', use_video_port=True)
+        self._current_frame = self._stream.array
 
-        return frame
-
-    def get_image(self, image_type):
-        if image_type == IMAGE_TYPES.foreground:
+    def get_image(self, image_type: ImageType):
+        image_type = image_type.decode('utf-8')
+        if image_type == ImageType.foreground.value:
             image = self._foreground_image
-        elif image_type == IMAGE_TYPES.background:
+        elif image_type == ImageType.background.value:
             image = self._background_image
         else:
-            image = self._difference_image
+            image = self._difference_thresholded_image
 
         return image
 
     def get_percentage_of_active_pixels_in_new_frame_from_camera(self):
         # grab and process frame, update the background and foreground model
-        frame = self._grab_new_image_in_opencv_format()
         # process the frame
-        self._foreground_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        try:
+            self._current_capture_thread.join()
+        except AttributeError:
+            pass
+
+        self._foreground_image = cv2.cvtColor(self._current_frame, cv2.COLOR_BGR2GRAY)
+
+        self._current_capture_thread = Thread(target=self._grab_new_image_in_opencv_format)
+        self._current_capture_thread.start()
+
         # calculate the difference between current and background frame
         difference = cv2.absdiff(self._background_image, self._foreground_image)
         # process the difference
@@ -105,7 +119,7 @@ if __name__ == "__main__":
     while key != 27:    # exit on ESC
         # main loop - 20 fps
         percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
-        cv2.imshow("current frame", VSN_image_processor.get_image(IMAGE_TYPES.foreground))
+        cv2.imshow("current frame", VSN_image_processor.get_image(ImageType.foreground))
         print("Percentage of of active pixels in the image: ", percentage_of_active_pixels_, "\r\n")
         key = cv2.waitKey(50)
 

@@ -7,7 +7,7 @@ import cv2
 import numpy
 import time
 
-from client.VSNImageProcessing import VSNImageProcessing
+from client.VSNImageProcessing_picam import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import VSNPacket
 
@@ -36,7 +36,7 @@ class VSNPicam:
             self._flag_send_image
         )
 
-        self._reactor = None
+        self._do_regular_update_time = 0
 
     def _prepare_camera_name_and_number(self):
         # if the names was not set try getting it by gethostname
@@ -51,24 +51,25 @@ class VSNPicam:
         print("Node number: ", self._node_number, "\r\n", "Node name: ", self._node_name)
 
     def _do_regular_update(self):
+        current_time = time.perf_counter()
+        print('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' % ((current_time - self._do_regular_update_time) * 1000))
+        self._do_regular_update_time = current_time
         # queue the next call to itself
         reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
 
-        time_start = time.clock()
+        time_start = time.perf_counter()
 
         if self._activity_controller.is_activation_below_threshold():
             self._image_processor.grab_images(5)
 
-        time_after_grab = time.clock()
-
         percentage_of_active_pixels = self._image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
         self._activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
 
-        time_after_get_percentage = time.clock()
+        time_after_get_percentage = time.perf_counter()
 
-        #self._flush_image_buffer_when_going_low_power()
+        # self._flush_image_buffer_when_going_low_power()
 
-        print(self._activity_controller.get_state_as_string() + "\r\n")
+        print(self._activity_controller.get_state_as_string())
 
         self._packet_to_send.set(
             self._node_number,
@@ -78,18 +79,17 @@ class VSNPicam:
         )
         self._client_factory.send_packet(self._packet_to_send)
 
-        time_after_sending_packet = time.clock()
+        time_after_sending_packet = time.perf_counter()
 
         if self._flag_send_image:
             image_as_string = self._encode_image_for_sending()
             self._client_factory.send_image(image_as_string)
 
-        time_after_encoding = time.clock()
+        time_after_encoding = time.perf_counter()
 
-        print('Grabbing 5 images took: %.2f ms'% ((time_after_grab - time_start) * 1000))
-        print('Calculating percentage took: %.2f ms'% ((time_after_get_percentage - time_after_grab) * 1000))
-        print('Sending packet took: %.2f ms'% ((time_after_sending_packet - time_after_grab) * 1000))
-        print('Encoding took: %.2f ms'% ((time_after_encoding - time_after_sending_packet) * 1000))
+        print('Calculating percentage took: %.2f ms' % ((time_after_get_percentage - time_start) * 1000))
+        print('Sending packet took: %.2f ms' % ((time_after_sending_packet - time_after_get_percentage) * 1000))
+        print('Encoding took: %.2f ms' % ((time_after_encoding - time_after_sending_packet) * 1000))
 
     def _flush_image_buffer_when_going_low_power(self):
         if self._activity_controller.is_activation_below_threshold():
@@ -120,7 +120,7 @@ class VSNPicam:
 
 if __name__ == '__main__':
     # the object can be created by specifying its name:
-    #picam = VSNPicam("picam01", 0)
+    # picam = VSNPicam("picam01", 0)
     # or by letting it get its name with gethostname function
     # if it is in picamXY format it will be accepted
     # otherwise picam03 name will be used
