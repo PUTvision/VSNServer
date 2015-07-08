@@ -8,7 +8,6 @@ from common.VSNPacket import VSNPacketToClient
 
 
 class VSNClient(basic.Int32StringReceiver):
-
     def __init__(self):
         pass
 
@@ -23,14 +22,13 @@ class VSNClient(basic.Int32StringReceiver):
         self.factory.client_disconnected()
 
     def stringReceived(self, string):
-        packet = VSNPacketToClient()
-        packet.unpack_from_receive(string)
+        packet = VSNPacketToClient.deserialize(string)
         self.factory.client_received_data(packet)
 
     # additional functions
 
     def send_packet(self, packet):
-        data_packed_as_string = packet.pack_to_send()
+        data_packed_as_string = packet.serialize()
         self.sendString(data_packed_as_string)
 
     def send_image(self, image_as_string):
@@ -40,10 +38,10 @@ class VSNClient(basic.Int32StringReceiver):
 class VSNClientFactory(protocol.ClientFactory):
     protocol = VSNClient
     # above line is equal to
-    #def buildProtocol(self, addr):
-    #    p = SimpleClient()
-    #    p.factory = self
-    #    return p
+    # def buildProtocol(self, addr):
+    #     p = SimpleClient()
+    #     p.factory = self
+    #     return p
 
     def __init__(self, packet_received_callback):
         self.client = None
@@ -76,7 +74,7 @@ class VSNClientFactory(protocol.ClientFactory):
 
 
 from twisted.internet import task
-from common.VSNPacket import VSNPacket
+from common.VSNPacket import VSNPacketToServer
 
 
 def send_packet(packet):
@@ -99,8 +97,7 @@ if __name__ == '__main__':
     # connect factory to this host and port
     reactor.connectTCP(SERVER_IP, SERVER_PORT, client_factory)
 
-    VSN_packet = VSNPacket()
-    VSN_packet.set(1, 10.0, 5.0, False)
+    VSN_packet = VSNPacketToServer(1, 10.0, 5.0, False)
     periodic_action = task.LoopingCall(send_packet, VSN_packet)
     periodic_action.start(2.0)
 

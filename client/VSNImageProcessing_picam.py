@@ -61,10 +61,9 @@ class VSNImageProcessing:
         self._current_frame = self._stream.array
 
     def get_image(self, image_type: ImageType):
-        image_type = image_type.decode('utf-8')
-        if image_type == ImageType.foreground.value:
+        if image_type == ImageType.foreground:
             image = self._foreground_image
-        elif image_type == ImageType.background.value:
+        elif image_type == ImageType.background:
             image = self._background_image
         else:
             image = self._difference_thresholded_image

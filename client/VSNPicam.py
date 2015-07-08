@@ -9,7 +9,7 @@ import time
 
 from client.VSNImageProcessing_picam import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
-from common.VSNPacket import VSNPacket
+from common.VSNPacket import VSNPacketToServer
 
 from client.VSNClient import VSNClientFactory
 from common.VSNPacket import ImageType
@@ -27,14 +27,10 @@ class VSNPicam:
         self._client_factory = VSNClientFactory(self._packet_received_callback)
         self._image_processor = VSNImageProcessing(video_capture_number)
         self._activity_controller = VSNActivityController()
-        self._packet_to_send = VSNPacket()
-
-        self._packet_to_send.set(
-            self._node_number,
-            0.0,
-            self._activity_controller.get_activation_level(),
-            self._flag_send_image
-        )
+        self._packet_to_send = VSNPacketToServer(self._node_number,
+                                                 0.0,
+                                                 self._activity_controller.get_activation_level(),
+                                                 self._flag_send_image)
 
         self._do_regular_update_time = 0
 

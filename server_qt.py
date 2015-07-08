@@ -260,7 +260,7 @@ class SampleGUIServerWindow(QMainWindow):
 
     def on_client_image_received(self, image_as_string):
         data = np.fromstring(image_as_string, dtype='uint8')
-        #decode jpg image to numpy array and display
+        # decode jpg image to numpy array and display
         decimg = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
 
         qi = QtGui.QImage(decimg, 320, 240, QtGui.QImage.Format_Indexed8)
@@ -269,13 +269,9 @@ class SampleGUIServerWindow(QMainWindow):
     def service_client(self, camera_number, white_pixels, activation_level, client):
         activation_neighbours = self._cameras.update_state(camera_number, activation_level, white_pixels)
 
-        packet_to_send = VSNPacketToClient()
-        packet_to_send.set(
-            activation_neighbours,
-            #ImageType.difference,
-            ImageType.foreground,
-            self._cameras.get_flag_send_image(camera_number)
-        )
+        packet_to_send = VSNPacketToClient(activation_neighbours,
+                                           ImageType.foreground,
+                                           self._cameras.get_flag_send_image(camera_number))
         client.send_packet(packet_to_send)
 
         # TODO: remove node index variable and use camera name instead

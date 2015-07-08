@@ -5,7 +5,7 @@ from enum import Enum
 from twisted.protocols import basic
 from twisted.internet import protocol
 
-from common.VSNPacket import VSNPacket
+from common.VSNPacket import VSNPacketToServer
 
 
 class ReceiveState(Enum):
@@ -29,8 +29,7 @@ class VSNServer(basic.Int32StringReceiver):
 
     def stringReceived(self, string):
         if self._ReceiveState == ReceiveState.packet_standard:
-            packet = VSNPacket()
-            packet.unpack_from_receive(string)
+            packet = VSNPacketToServer.deserialize(string)
             self.factory.client_packet_received(packet, self)
 
             if packet.flag_image_next:
@@ -43,8 +42,7 @@ class VSNServer(basic.Int32StringReceiver):
     # additional functions
 
     def send_packet(self, packet):
-        data_packed_as_string = packet.pack_to_send()
-        self.sendString(data_packed_as_string)
+        self.sendString(packet.serialize())
 
 
 class VSNServerFactory(protocol.Factory):
