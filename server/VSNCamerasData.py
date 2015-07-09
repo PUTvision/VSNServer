@@ -124,19 +124,19 @@ class VSNCameras:
         self.cameras[camera_name] = VSNCameraData()
 
     def _convert_camera_number_to_camera_name(self, camera_number):
-        camera_name = 'picam' + str(camera_number).zfill(2)
+        camera_name = "picam" + str(camera_number).zfill(2)
         return camera_name
 
     def save_cameras_data_to_files(self):
         for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
-            with open(camera_name + '.txt', 'wb') as file:
+            with open(camera_name + ".txt", "wb") as file:
                 pickle.dump(self.cameras[camera_name], file)
 
     def load_cameras_data_from_files(self):
         for i in range(1, 6):
             camera_name = self._convert_camera_number_to_camera_name(i)
-            with(camera_name + '.txt', 'rb') as file:
+            with(camera_name + ".txt", "rb") as file:
                 self.cameras[camera_name] = pickle.load(file)
 
     def clear_cameras_data(self):
@@ -156,7 +156,7 @@ class VSNCameras:
         self.cameras[camera_name].activation_neighbours = 0.0
         for idx in range(0, len(self.cameras) - 1):
             # idx+1 is used because cameras are numbered 1, 2, 3, 4, 5
-            current_camera_name = 'picam' + str(idx + 1).zfill(2)
+            current_camera_name = "picam" + str(idx + 1).zfill(2)
             self.cameras[camera_name].activation_neighbours += \
                 self._dependency_table[camera_name][idx] * self.cameras[current_camera_name].percentage_of_active_pixels
 
