@@ -9,7 +9,7 @@ import time
 
 from client.VSNImageProcessing_picam import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
-from common.VSNPacket import DataPacketToServer, ClientPacketRouter
+from common.VSNPacket import DataPacketToServer, ClientPacketRouter, ConfigurationPacketToServer
 
 from client.VSNClient import VSNClient
 from common.VSNUtility import ImageType, Config
@@ -112,11 +112,16 @@ class VSNPicam:
                                                    self.__flag_send_image)
 
         if packet.node_id is not None:
-            # First configuration packet
+            # First configuration packet with node_id
             self.__node_id = packet.node_id
+        elif packet.hostname_based_ids:
+            print('HERE')
+            # First configuration packet without node_id
+            self.__node_id = int(''.join(x for x in socket.gethostname() if x.isdigit()))
+            self.__client.send(ConfigurationPacketToServer(self.__node_id))
 
-            if self.__waiting_for_configuration:
-                self.start()
+        if self.__waiting_for_configuration:
+            self.start()
 
     def start(self):
         if self.__node_id is not None:

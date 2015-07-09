@@ -60,7 +60,7 @@ class SampleGUIServerWindow(QMainWindow):
             Config.server['listening_port'],
             self.on_client_connection_made,
             self.on_client_connection_lost,
-            self.on_client_data_received
+            VSNPacket.ServerPacketRouter(self.on_client_data_received, self.on_client_configuration_received)
         )
         self.log('Connecting...')
 
@@ -194,7 +194,11 @@ class SampleGUIServerWindow(QMainWindow):
 
     def on_client_connection_made(self, client):
         self.log('Client connected')
-        client.send(VSNPacket.ConfigurationPacketToClient(client.id))
+
+        if Config.clients['hostname_based_ids']:
+            client.send(VSNPacket.ConfigurationPacketToClient())
+        else:
+            client.send(VSNPacket.ConfigurationPacketToClient(client.id))
 
     def on_client_connection_lost(self):
         self.log('Client disconnected')
@@ -210,6 +214,10 @@ class SampleGUIServerWindow(QMainWindow):
 
         if packet.image is not None:
             self.service_client_image(packet.image)
+
+    def on_client_configuration_received(self, client, packet: VSNPacket.DataPacketToServer):
+        self.log('Received configuration ' + repr(packet))
+        client.id = packet.node_id
 
     def service_client_image(self, image_as_string: str):
         data = np.fromstring(image_as_string, dtype='uint8')
