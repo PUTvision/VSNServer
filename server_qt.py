@@ -192,8 +192,9 @@ class SampleGUIServerWindow(QMainWindow):
     def on_clear_history(self):
         self._cameras.clear_cameras_data()
 
-    def on_client_connection_made(self):
+    def on_client_connection_made(self, client):
         self.log('Client connected')
+        client.send(VSNPacket.ConfigurationPacketToClient(client.id))
 
     def on_client_connection_lost(self):
         self.log('Client disconnected')
@@ -202,7 +203,6 @@ class SampleGUIServerWindow(QMainWindow):
         self.log('Received data')
 
         self.service_client_data(
-            packet.camera_number,
             packet.white_pixels,
             packet.activation_level,
             client
@@ -219,23 +219,23 @@ class SampleGUIServerWindow(QMainWindow):
         qi = QtGui.QImage(decimg, 320, 240, QtGui.QImage.Format_Indexed8)
         self.label_image.setPixmap(QtGui.QPixmap.fromImage(qi))
 
-    def service_client_data(self, camera_number, white_pixels, activation_level, client):
-        activation_neighbours = self._cameras.update_state(camera_number, activation_level, white_pixels)
+    def service_client_data(self, white_pixels, activation_level, client):
+        activation_neighbours = self._cameras.update_state(client.id, activation_level, white_pixels)
 
         packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours,
                                                       ImageType.foreground,
-                                                      self._cameras.get_flag_send_image(camera_number))
+                                                      self._cameras.get_flag_send_image(client.id))
         client.send(packet_to_send)
 
         # TODO: remove node index variable and use camera name instead
-        node_index = camera_number - 1
+        node_index = client.id - 1
         self._graphsController.set_new_values(
             node_index,
             activation_level + activation_neighbours,
             white_pixels
         )
 
-        self._update_status_monitor(camera_number)
+        self._update_status_monitor(client.id)
 
     def log(self, msg):
         timestamp = '[%010.3f]' % time.clock()

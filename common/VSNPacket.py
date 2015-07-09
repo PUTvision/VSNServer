@@ -2,22 +2,21 @@ from common.VSNUtility import Config
 
 
 class ConfigurationPacketToClient:
-    def __init__(self):
-        self.dependencies = Config.dependencies
-        self.parameters_below_threshold = Config.parameters_below_threshold
-        self.parameters_above_threshold = Config.parameters_above_threshold
+    def __init__(self, node_id=None):
+        self.node_id = node_id
+        self.parameters_below_threshold = Config.clients['parameters_below_threshold']
+        self.parameters_above_threshold = Config.clients['parameters_above_threshold']
+        self.activation_level_threshold = Config.clients['activation_level_threshold']
 
 
 class DataPacketToServer:
-    def __init__(self, camera_number, white_pixels, activation_level, flag_image_next, image=None):
-        self.camera_number = camera_number
+    def __init__(self, white_pixels, activation_level, flag_image_next, image=None):
         self.white_pixels = white_pixels
         self.activation_level = activation_level
         self.flag_image_next = flag_image_next
         self.image = image
 
-    def set(self, camera_number, white_pixels, activation_level, flag_image_next, image=None):
-        self.camera_number = camera_number
+    def set(self, white_pixels, activation_level, flag_image_next, image=None):
         self.white_pixels = white_pixels
         self.activation_level = activation_level
         self.flag_image_next = flag_image_next
@@ -34,3 +33,17 @@ class DataPacketToClient:
         self.activation_neighbours = activation_neighbours
         self.image_type = image_type
         self.flag_send_image = flag_send_image
+
+
+class ClientPacketRouter:
+    def __init__(self, data_packet_callback: callable([object]), configuration_packet_callback: callable([object])):
+        self.__data_packet_callback = data_packet_callback
+        self.__configuration_packet_callback = configuration_packet_callback
+
+    def route_packet(self, packet: object):
+        if isinstance(packet, DataPacketToClient):
+            self.__data_packet_callback(packet)
+        elif isinstance(packet, ConfigurationPacketToClient):
+            self.__configuration_packet_callback(packet)
+        else:
+            raise TypeError('Packet of unsupported type received')

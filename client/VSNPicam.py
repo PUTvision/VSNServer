@@ -9,83 +9,67 @@ import time
 
 from client.VSNImageProcessing_picam import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
-from common.VSNPacket import DataPacketToServer
+from common.VSNPacket import DataPacketToServer, ClientPacketRouter
 
 from client.VSNClient import VSNClient
 from common.VSNUtility import ImageType, Config
 
 
 class VSNPicam:
-    def __init__(self, camera_name=None, video_capture_number=0):
-        self._node_name = camera_name
-        self._node_number = 3
-        self._flag_send_image = False  # default behavior - do not send the image data
-        self._image_type = ImageType.foreground
+    def __init__(self):
+        self.__node_id = None
+        self.__flag_send_image = False  # default behavior - do not send the image data
+        self.__image_type = ImageType.foreground
 
-        self._prepare_camera_name_and_number()
+        self.__client = VSNClient(Config.server['address'],
+                                  Config.server['listening_port'],
+                                  ClientPacketRouter(self.__process_data_packet, self.__process_configuration_packet))
 
-        self._client = VSNClient(Config.server['address'],
-                                 Config.server['listening_port'],
-                                 self._packet_received_callback)
-        self._image_processor = VSNImageProcessing(video_capture_number)
-        self._activity_controller = VSNActivityController()
-        self._packet_to_send = DataPacketToServer(self._node_number,
-                                                  0.0,
-                                                  self._activity_controller.get_activation_level(),
-                                                  self._flag_send_image)
+        self.__image_processor = VSNImageProcessing()
+        self.__activity_controller = None
+        self.__packet_to_send = None
 
-        self._do_regular_update_time = 0
+        self.__do_regular_update_time = 0
 
         self.__event_loop = asyncio.get_event_loop()
 
-    def _prepare_camera_name_and_number(self):
-        # if the names was not set try getting it by gethostname
-        # it is of picamXX type parse XX to a number
+        self.__waiting_for_configuration = False
 
-        if self._node_name is None:
-            self._node_name = socket.gethostname()
-        if len(self._node_name) == 7 and self._node_name[0:5] == 'picam':
-            if self._node_name[5:7].isdigit():
-                self._node_number = int(self._node_name[5:7])
-
-        print('Node number: ', self._node_number, '\r\n', 'Node name: ', self._node_name)
-
-    def _do_regular_update(self):
+    def __do_regular_update(self):
         current_time = time.perf_counter()
-        print('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' % ((current_time - self._do_regular_update_time) * 1000))
-        self._do_regular_update_time = current_time
+        print('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' % ((current_time - self.__do_regular_update_time) * 1000))
+        self.__do_regular_update_time = current_time
         # queue the next call to itself
-        self.__event_loop.call_later(self._activity_controller.get_sample_time(), self._do_regular_update)
+        self.__event_loop.call_later(self.__activity_controller.get_sample_time(), self.__do_regular_update)
 
         time_start = time.perf_counter()
 
-        if self._activity_controller.is_activation_below_threshold():
-            self._image_processor.grab_images(5)
+        if self.__activity_controller.is_activation_below_threshold():
+            self.__image_processor.grab_images(5)
 
-        percentage_of_active_pixels = self._image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
-        self._activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
+        percentage_of_active_pixels = self.__image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
+        self.__activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
 
         time_after_get_percentage = time.perf_counter()
 
-        # self._flush_image_buffer_when_going_low_power()
+        # self.__flush_image_buffer_when_going_low_power()
 
-        print(self._activity_controller.get_state_as_string())
+        print(self.__activity_controller.get_state_as_string())
 
-        if self._flag_send_image:
-            image_as_string = self._encode_image_for_sending()
+        if self.__flag_send_image:
+            image_as_string = self.__encode_image_for_sending()
         else:
             image_as_string = None
 
         time_after_encoding = time.perf_counter()
 
-        self._packet_to_send.set(
-            self._node_number,
+        self.__packet_to_send.set(
             percentage_of_active_pixels,
-            self._activity_controller.get_activation_level(),
-            self._flag_send_image,
+            self.__activity_controller.get_activation_level(),
+            self.__flag_send_image,
             image_as_string
         )
-        self._client.send(self._packet_to_send)
+        self.__client.send(self.__packet_to_send)
 
         time_after_sending_packet = time.perf_counter()
 
@@ -93,30 +77,55 @@ class VSNPicam:
         print('Encoding took: %.2f ms' % ((time_after_encoding - time_after_get_percentage) * 1000))
         print('Sending packet took: %.2f ms' % ((time_after_sending_packet - time_after_encoding) * 1000))
 
-    def _flush_image_buffer_when_going_low_power(self):
-        if self._activity_controller.is_activation_below_threshold():
-            self._image_processor.grab_images(8)
+    def __flush_image_buffer_when_going_low_power(self):
+        if self.__activity_controller.is_activation_below_threshold():
+            self.__image_processor.grab_images(8)
 
-    def _encode_image_for_sending(self):
+    def __encode_image_for_sending(self):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-        image_to_send = self._image_processor.get_image(self._image_type)
+        image_to_send = self.__image_processor.get_image(self.__image_type)
         result, image_encoded = cv2.imencode('.jpg', image_to_send, encode_param)
         data = numpy.array(image_encoded)
         image_as_string = data.tostring()
         return image_as_string
 
-    def _packet_received_callback(self, packet):
-        print('Received packet: ', packet.activation_neighbours, ', ', packet.image_type, ', ', packet.flag_send_image)
-        self._activity_controller.set_params(
+    def __process_data_packet(self, packet):
+        print('Received data packet: ', packet.activation_neighbours, ', ', packet.image_type, ', ',
+              packet.flag_send_image)
+
+        self.__activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )
-        self._flag_send_image = packet.flag_send_image
-        self._image_type = packet.image_type
+        self.__flag_send_image = packet.flag_send_image
+        self.__image_type = packet.image_type
+
+    def __process_configuration_packet(self, packet):
+        print('Received configuration packet: %r %r %r' % (packet.node_id, packet.parameters_below_threshold,
+              packet.parameters_above_threshold))
+
+        self.__activity_controller = VSNActivityController(packet.parameters_below_threshold,
+                                                           packet.parameters_above_threshold,
+                                                           packet.activation_level_threshold)
+
+        self.__packet_to_send = DataPacketToServer(0.0,
+                                                   self.__activity_controller.get_activation_level(),
+                                                   self.__flag_send_image)
+
+        if packet.node_id is not None:
+            # First configuration packet
+            self.__node_id = packet.node_id
+
+            if self.__waiting_for_configuration:
+                self.start()
 
     def start(self):
-        self.__event_loop.call_later(self._activity_controller.get_sample_time(), self._do_regular_update)
+        if self.__node_id is not None:
+            self.__event_loop.call_later(self.__activity_controller.get_sample_time(), self.__do_regular_update)
+        else:
+            self.__waiting_for_configuration = True
 
-        self.__event_loop.run_forever()
+        if not self.__event_loop.is_running():
+            self.__event_loop.run_forever()
 
 
 if __name__ == '__main__':

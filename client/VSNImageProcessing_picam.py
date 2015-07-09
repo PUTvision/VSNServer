@@ -13,7 +13,7 @@ import time
 
 
 class VSNImageProcessing:
-    def __init__(self, _):
+    def __init__(self):
         self._camera = None
         self._structing_element = None
         self._difference_thresholded_image = None
