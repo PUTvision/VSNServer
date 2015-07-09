@@ -91,7 +91,7 @@ class VSNActivityController:
                str(self._parameters.sample_time)
 
 
-from common.VSNPacket import ImageType
+from common.VSNUtility import ImageType
 from client.VSNImageProcessing import VSNImageProcessing
 import cv2
 

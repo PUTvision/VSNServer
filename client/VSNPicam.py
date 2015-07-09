@@ -1,6 +1,6 @@
 __author__ = 'Amin'
 
-from twisted.internet import reactor
+import asyncio
 
 import socket
 import cv2
@@ -9,10 +9,10 @@ import time
 
 from client.VSNImageProcessing_picam import VSNImageProcessing
 from client.VSNActivityController import VSNActivityController
-from common.VSNPacket import VSNPacketToServer
+from common.VSNPacket import DataPacketToServer
 
-from client.VSNClient import VSNClientFactory
-from common.VSNPacket import ImageType
+from client.VSNClient import VSNClient
+from common.VSNUtility import ImageType, Config
 
 
 class VSNPicam:
@@ -24,15 +24,19 @@ class VSNPicam:
 
         self._prepare_camera_name_and_number()
 
-        self._client_factory = VSNClientFactory(self._packet_received_callback)
+        self._client = VSNClient(Config.server['address'],
+                                 Config.server['listening_port'],
+                                 self._packet_received_callback)
         self._image_processor = VSNImageProcessing(video_capture_number)
         self._activity_controller = VSNActivityController()
-        self._packet_to_send = VSNPacketToServer(self._node_number,
-                                                 0.0,
-                                                 self._activity_controller.get_activation_level(),
-                                                 self._flag_send_image)
+        self._packet_to_send = DataPacketToServer(self._node_number,
+                                                  0.0,
+                                                  self._activity_controller.get_activation_level(),
+                                                  self._flag_send_image)
 
         self._do_regular_update_time = 0
+
+        self.__event_loop = asyncio.get_event_loop()
 
     def _prepare_camera_name_and_number(self):
         # if the names was not set try getting it by gethostname
@@ -51,7 +55,7 @@ class VSNPicam:
         print('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' % ((current_time - self._do_regular_update_time) * 1000))
         self._do_regular_update_time = current_time
         # queue the next call to itself
-        reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
+        self.__event_loop.call_later(self._activity_controller.get_sample_time(), self._do_regular_update)
 
         time_start = time.perf_counter()
 
@@ -67,25 +71,27 @@ class VSNPicam:
 
         print(self._activity_controller.get_state_as_string())
 
+        if self._flag_send_image:
+            image_as_string = self._encode_image_for_sending()
+        else:
+            image_as_string = None
+
+        time_after_encoding = time.perf_counter()
+
         self._packet_to_send.set(
             self._node_number,
             percentage_of_active_pixels,
             self._activity_controller.get_activation_level(),
-            self._flag_send_image
+            self._flag_send_image,
+            image_as_string
         )
-        self._client_factory.send_packet(self._packet_to_send)
+        self._client.send(self._packet_to_send)
 
         time_after_sending_packet = time.perf_counter()
 
-        if self._flag_send_image:
-            image_as_string = self._encode_image_for_sending()
-            self._client_factory.send_image(image_as_string)
-
-        time_after_encoding = time.perf_counter()
-
         print('Calculating percentage took: %.2f ms' % ((time_after_get_percentage - time_start) * 1000))
-        print('Sending packet took: %.2f ms' % ((time_after_sending_packet - time_after_get_percentage) * 1000))
-        print('Encoding took: %.2f ms' % ((time_after_encoding - time_after_sending_packet) * 1000))
+        print('Encoding took: %.2f ms' % ((time_after_encoding - time_after_get_percentage) * 1000))
+        print('Sending packet took: %.2f ms' % ((time_after_sending_packet - time_after_encoding) * 1000))
 
     def _flush_image_buffer_when_going_low_power(self):
         if self._activity_controller.is_activation_below_threshold():
@@ -107,12 +113,10 @@ class VSNPicam:
         self._flag_send_image = packet.flag_send_image
         self._image_type = packet.image_type
 
-    def start(self, server_ip='127.0.0.1', server_port=50001):
-        # connect factory to this host and port
-        reactor.connectTCP(server_ip, server_port, self._client_factory)
-        reactor.callLater(self._activity_controller.get_sample_time(), self._do_regular_update)
+    def start(self):
+        self.__event_loop.call_later(self._activity_controller.get_sample_time(), self._do_regular_update)
 
-        reactor.run()
+        self.__event_loop.run_forever()
 
 
 if __name__ == '__main__':

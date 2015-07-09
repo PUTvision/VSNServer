@@ -2,7 +2,7 @@ __author__ = 'Amin'
 
 import cv2
 
-from common.VSNPacket import ImageType
+from common.VSNUtility import ImageType
 
 
 class VSNImageProcessing:
@@ -37,7 +37,7 @@ class VSNImageProcessing:
 
         self._structing_element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
-    def get_image(self, image_type: bytes):
+    def get_image(self, image_type: ImageType):
         image_type = image_type.decode('utf-8')
         if image_type == ImageType.foreground.value:
             image = self._foreground_image

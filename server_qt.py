@@ -2,27 +2,26 @@ __author__ = 'Amin'
 
 import sys
 import time
+import asyncio
+import numpy as np
+import cv2
 
-from twisted.internet.endpoints import TCP4ServerEndpoint
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+from quamash import QEventLoop
 from pyqtgraph.Qt import QtGui, QtCore
+
+from server.VSNServer import VSNServer
+from common import VSNPacket
+from common.VSNUtility import Config, ImageType
+from server.VSNGraph import VSNGraphController
+from server.VSNCamerasData import VSNCameras
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     _fromUtf8 = lambda s: s
-
-import numpy as np
-
-import cv2
-
-from server import qt4reactor
-from server.VSNServer import VSNServerFactory
-from common.VSNPacket import VSNPacketToClient
-from common.VSNPacket import ImageType
-from server.VSNGraph import VSNGraphController
-from server.VSNCamerasData import VSNCameras
 
 
 class LogWidget(QTextBrowser):
@@ -40,11 +39,10 @@ class LogWidget(QTextBrowser):
 
 
 class SampleGUIServerWindow(QMainWindow):
-    def __init__(self, reactor, parent=None):
-        self._TCP_PORT = 50001
+    def __init__(self, event_loop: asyncio.BaseEventLoop, parent=None):
+        self.server = None
 
         super(SampleGUIServerWindow, self).__init__(parent)
-        self.reactor = reactor
 
         self._graphsController = None
 
@@ -54,26 +52,24 @@ class SampleGUIServerWindow(QMainWindow):
 
         self._cameras = VSNCameras()
 
+        self.__event_loop = event_loop
+
     def create_server(self):
-        self.server = VSNServerFactory(
+        self.server = VSNServer(
+            Config.server['listening_address'],
+            Config.server['listening_port'],
             self.on_client_connection_made,
             self.on_client_connection_lost,
-            self.on_client_data_received,
-            self.on_client_image_received
+            self.on_client_data_received
         )
         self.log('Connecting...')
-        # When the connection is made, self.client calls the on_client_connect
-        # callback.
-        #
-        endpoint = TCP4ServerEndpoint(reactor, self._TCP_PORT)
-        endpoint.listen(self.server)
 
     def create_main_frame(self):
         # first row
         hbox_row_1 = QHBoxLayout()
 
         self.log_widget = LogWidget()
-        self.label_image = QtGui.QLabel()
+        self.label_image = QLabel()
         myPixmap = QtGui.QPixmap(_fromUtf8('Crazy-Cat.jpg'))
         myScaledPixmap = myPixmap.scaled(self.label_image.size(), Qt.KeepAspectRatio)
         self.label_image.setPixmap(myScaledPixmap)
@@ -197,23 +193,25 @@ class SampleGUIServerWindow(QMainWindow):
         self._cameras.clear_cameras_data()
 
     def on_client_connection_made(self):
-        self.log('Connected to server.')
+        self.log('Client connected')
 
     def on_client_connection_lost(self):
-        # reason is a twisted.python.failure.Failure  object
-        self.log('Connection failed')
+        self.log('Client disconnected')
 
-    def on_client_data_received(self, packet, client):
+    def on_client_data_received(self, client, packet: VSNPacket.DataPacketToServer):
         self.log('Received data')
 
-        self.service_client(
+        self.service_client_data(
             packet.camera_number,
             packet.white_pixels,
             packet.activation_level,
             client
         )
 
-    def on_client_image_received(self, image_as_string):
+        if packet.image is not None:
+            self.service_client_image(packet.image)
+
+    def service_client_image(self, image_as_string: str):
         data = np.fromstring(image_as_string, dtype='uint8')
         # decode jpg image to numpy array and display
         decimg = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
@@ -221,13 +219,13 @@ class SampleGUIServerWindow(QMainWindow):
         qi = QtGui.QImage(decimg, 320, 240, QtGui.QImage.Format_Indexed8)
         self.label_image.setPixmap(QtGui.QPixmap.fromImage(qi))
 
-    def service_client(self, camera_number, white_pixels, activation_level, client):
+    def service_client_data(self, camera_number, white_pixels, activation_level, client):
         activation_neighbours = self._cameras.update_state(camera_number, activation_level, white_pixels)
 
-        packet_to_send = VSNPacketToClient(activation_neighbours,
-                                           ImageType.foreground,
-                                           self._cameras.get_flag_send_image(camera_number))
-        client.send_packet(packet_to_send)
+        packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours,
+                                                      ImageType.foreground,
+                                                      self._cameras.get_flag_send_image(camera_number))
+        client.send(packet_to_send)
 
         # TODO: remove node index variable and use camera name instead
         node_index = camera_number - 1
@@ -244,16 +242,16 @@ class SampleGUIServerWindow(QMainWindow):
         self.log_widget.append(timestamp + ' ' + str(msg))
 
     def closeEvent(self, e):
-        self.reactor.stop()
-
+        self.server.stop()
+        self.__event_loop.stop()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    qt4reactor.install()
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
 
-    from twisted.internet import reactor
-
-    main_window = SampleGUIServerWindow(reactor)
+    main_window = SampleGUIServerWindow(loop)
     main_window.show()
 
-    reactor.run()
+    loop.run_forever()
+    loop.close()

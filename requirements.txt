@@ -1,0 +1,4 @@
+PyYAML
+quamash
+pyqtgraph
+picamera

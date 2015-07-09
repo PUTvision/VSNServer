@@ -3,7 +3,7 @@ __author__ = 'Amin'
 import cv2
 
 from threading import Thread
-from common.VSNPacket import ImageType
+from common.VSNUtility import ImageType, Config
 
 import picamera
 import picamera.array
@@ -29,8 +29,8 @@ class VSNImageProcessing:
 
     def _init_camera(self):
         self._camera = picamera.PiCamera()
-        self._camera.resolution = (320, 240)
-        self._camera.framerate = 20
+        self._camera.resolution = (Config.clients['image_size']['width'], Config.clients['image_size']['height'])
+        self._camera.framerate = Config.clients['frame_rate']
 
         print('Frame resolution set')
 

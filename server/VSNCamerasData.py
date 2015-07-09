@@ -1,6 +1,6 @@
 __author__ = 'Amin'
 
-from common.VSNPacket import ImageType
+from common.VSNUtility import ImageType
 from common.VSNUtility import GainSampletimeTuple
 
 import pickle
