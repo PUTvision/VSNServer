@@ -26,7 +26,6 @@ class VSNReactor:
 
         self.__image_processor = VSNImageProcessor(camera.grab_image())
         self.__activity_controller = None
-        self.__packet_to_send = None
 
         self.__do_regular_update_time = 0
 
@@ -58,13 +57,10 @@ class VSNReactor:
 
         time_after_encoding = time.perf_counter()
 
-        self.__packet_to_send.set(
-            percentage_of_active_pixels,
-            self.__activity_controller.get_activation_level(),
-            self.__flag_send_image,
-            image_as_string
-        )
-        self.__client.send(self.__packet_to_send)
+        self.__client.send(DataPacketToServer(percentage_of_active_pixels,
+                                              self.__activity_controller.get_activation_level(),
+                                              self.__flag_send_image,
+                                              image_as_string))
 
         time_after_sending_packet = time.perf_counter()
 
@@ -81,31 +77,27 @@ class VSNReactor:
         return image_as_string
 
     def __process_data_packet(self, packet):
-        print('Received data packet: ', packet.activation_neighbours, ', ', packet.image_type, ', ',
-              packet.flag_send_image)
+        print('Received data packet: ', packet.activation_neighbours, ',', packet.flag_send_image)
 
         self.__activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )
         self.__flag_send_image = packet.flag_send_image
-        self.__image_type = packet.image_type
 
     def __process_configuration_packet(self, packet):
         print('Received configuration packet: %r %r %r' % (packet.node_id, packet.parameters_below_threshold,
-              packet.parameters_above_threshold))
+                                                           packet.parameters_above_threshold))
+
+        self.__image_type = packet.image_type
 
         self.__activity_controller = VSNActivityController(packet.parameters_below_threshold,
                                                            packet.parameters_above_threshold,
                                                            packet.activation_level_threshold)
 
-        self.__packet_to_send = DataPacketToServer(0.0,
-                                                   self.__activity_controller.get_activation_level(),
-                                                   self.__flag_send_image)
-
         if packet.node_id is not None:
             # First configuration packet with node_id
             self.__node_id = packet.node_id
-        elif packet.hostname_based_ids:
+        elif self.__node_id is None and packet.hostname_based_ids:
             # First configuration packet without node_id
             try:
                 self.__node_id = int(''.join(x for x in socket.gethostname() if x.isdigit()))

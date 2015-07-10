@@ -1,4 +1,5 @@
 import cv2
+import time
 
 from abc import ABCMeta, abstractmethod
 from threading import Thread
@@ -28,6 +29,13 @@ class VSNPiCamera:
         import picamera.array
 
         self.__camera = picamera.PiCamera()
+
+        time.sleep(2)  # Let the camera adjust parameters before disabling auto mode
+        awb_gains = self.__camera.awb_gains
+        self.__camera.awb_mode = 'off'
+        self.__camera.awb_gains = awb_gains
+        self.__camera.exposure_mode = 'off'
+
         self.__camera.resolution = (Config.clients['image_size']['width'], Config.clients['image_size']['height'])
         self.__camera.framerate = Config.clients['frame_rate']
         self.__stream = picamera.array.PiRGBArray(self.__camera, size=(320, 240))

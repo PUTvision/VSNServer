@@ -1,4 +1,4 @@
-from server.VSNCamerasData import VSNCameras
+from server.VSNCameras import VSNCameras
 
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg

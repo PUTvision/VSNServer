@@ -19,6 +19,7 @@ class VSNActivityController:
 
     # lowpass filter function modelled after a 1st order inertial object transformed using delta minus method
     def __lowpass(self, prev_state, input_data, gain):
+        print('GAIN: %f' % gain)
         time_constant = 0.7
         output = \
             (gain / time_constant) * input_data + \

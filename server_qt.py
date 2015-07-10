@@ -16,7 +16,7 @@ from server.VSNServer import VSNServer
 from common import VSNPacket
 from common.VSNUtility import Config, ImageType
 from server.VSNGraph import VSNGraphController
-from server.VSNCamerasData import VSNCameras
+from server.VSNCameras import VSNCameras
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -44,13 +44,13 @@ class SampleGUIServerWindow(QMainWindow):
 
         super(SampleGUIServerWindow, self).__init__(parent)
 
-        self._graphsController = None
+        self.__graphsController = None
 
         self.create_main_frame()
         self.create_server()
         self.create_graphs()
 
-        self._cameras = VSNCameras()
+        self.__cameras = VSNCameras()
 
         self.__event_loop = event_loop
 
@@ -89,8 +89,12 @@ class SampleGUIServerWindow(QMainWindow):
         self.combo_box_cameras = QComboBox()
         self.combo_box_cameras.addItems(cameras)
 
-        self.button_choose_camera = QPushButton('choose')
-        self.button_choose_camera.clicked.connect(self.on_choose_camera_clicked)
+        image_types = ['foreground', 'background', 'difference']
+        self.combo_box_image_types = QComboBox()
+        self.combo_box_image_types.addItems(image_types)
+
+        self.button_choose = QPushButton('choose')
+        self.button_choose.clicked.connect(self.on_choose_clicked)
 
         self.doit_button = QPushButton('Do it!')
         self.doit_button.clicked.connect(self.on_doit)
@@ -99,7 +103,8 @@ class SampleGUIServerWindow(QMainWindow):
         self.clear_history_button.clicked.connect(self.on_clear_history)
 
         hbox_row_2.addWidget(self.combo_box_cameras)
-        hbox_row_2.addWidget(self.button_choose_camera)
+        hbox_row_2.addWidget(self.combo_box_image_types)
+        hbox_row_2.addWidget(self.button_choose)
         hbox_row_2.addWidget(self.doit_button)
         hbox_row_2.addWidget(self.clear_history_button)
 
@@ -117,16 +122,16 @@ class SampleGUIServerWindow(QMainWindow):
         self.setCentralWidget(main_frame)
 
     def create_graphs(self):
-        self._graphsController = VSNGraphController()
-        self._graphsController.create_graph_window()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
-        self._graphsController.add_new_graph()
+        self.__graphsController = VSNGraphController()
+        self.__graphsController.create_graph_window()
+        self.__graphsController.add_new_graph()
+        self.__graphsController.add_new_graph()
+        self.__graphsController.add_new_graph()
+        self.__graphsController.add_new_graph()
+        self.__graphsController.add_new_graph()
 
         timer_plot = QtCore.QTimer(self)
-        timer_plot.timeout.connect(self._graphsController.update_graphs)
+        timer_plot.timeout.connect(self.__graphsController.update_graphs)
         timer_plot.start(200)
 
     def _create_status_monitor(self):
@@ -162,7 +167,7 @@ class SampleGUIServerWindow(QMainWindow):
         gain, \
         sample_time, \
         low_power_ticks, \
-        normal_ticks = self._cameras.get_status(camera_number)
+        normal_ticks = self.__cameras.get_status(camera_number)
 
         status = camera_name + '\t\t' + \
                  '{:.2f}'.format(active_pixels) + '\t\t' + \
@@ -175,8 +180,10 @@ class SampleGUIServerWindow(QMainWindow):
 
         self._picam_labels[camera_name].setText(status)
 
-    def on_choose_camera_clicked(self):
-        self._cameras.choose_camera_to_stream(self.combo_box_cameras.currentText())
+    def on_choose_clicked(self):
+        self.__cameras.choose_camera_to_stream(self.combo_box_cameras.currentText())
+        self.__cameras.set_image_type(self.combo_box_cameras.currentText(),
+                                      ImageType[self.combo_box_image_types.currentText()])
 
     def on_doit(self):
         # tests
@@ -187,18 +194,20 @@ class SampleGUIServerWindow(QMainWindow):
         # test for adding new row to the graph window
         # self._graphsController.add_new_graph()
 
-        self._cameras.save_cameras_data_to_files()
+        self.__cameras.save_cameras_data_to_files()
 
     def on_clear_history(self):
-        self._cameras.clear_cameras_data()
+        self.__cameras.clear_cameras_data()
 
     def on_client_connection_made(self, client):
         self.log('Client connected')
 
         if Config.clients['hostname_based_ids']:
-            client.send(VSNPacket.ConfigurationPacketToClient())
+            client.send(VSNPacket.ConfigurationPacketToClient(image_type=
+                                                              ImageType[self.combo_box_image_types.currentText()]))
         else:
             client.send(VSNPacket.ConfigurationPacketToClient(client.id))
+            self.__cameras.add_camera(client)
 
     def on_client_connection_lost(self):
         self.log('Client disconnected')
@@ -216,8 +225,9 @@ class SampleGUIServerWindow(QMainWindow):
             self.service_client_image(packet.image)
 
     def on_client_configuration_received(self, client, packet: VSNPacket.DataPacketToServer):
-        self.log('Received configuration ' + repr(packet))
+        self.log('Received client configuration')
         client.id = packet.node_id
+        self.__cameras.add_camera(client)
 
     def service_client_image(self, image_as_string: str):
         data = np.fromstring(image_as_string, dtype='uint8')
@@ -228,16 +238,15 @@ class SampleGUIServerWindow(QMainWindow):
         self.label_image.setPixmap(QtGui.QPixmap.fromImage(qi))
 
     def service_client_data(self, white_pixels, activation_level, client):
-        activation_neighbours = self._cameras.update_state(client.id, activation_level, white_pixels)
+        activation_neighbours = self.__cameras.update_state(client.id, activation_level, white_pixels)
 
         packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours,
-                                                      ImageType.foreground,
-                                                      self._cameras.get_flag_send_image(client.id))
+                                                      self.__cameras.get_flag_send_image(client.id))
         client.send(packet_to_send)
 
         # TODO: remove node index variable and use camera name instead
         node_index = client.id - 1
-        self._graphsController.set_new_values(
+        self.__graphsController.set_new_values(
             node_index,
             activation_level + activation_neighbours,
             white_pixels
@@ -252,6 +261,7 @@ class SampleGUIServerWindow(QMainWindow):
     def closeEvent(self, e):
         self.server.stop()
         self.__event_loop.stop()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
