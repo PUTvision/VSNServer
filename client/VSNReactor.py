@@ -105,6 +105,9 @@ class VSNReactor:
         if self.__waiting_for_configuration:
             self.start()
 
+        if packet.image_type is not None:
+            self.__image_type = packet.image_type
+
         if packet.send_image is not None:
             self.__send_image = packet.send_image
 
