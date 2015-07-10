@@ -17,7 +17,7 @@ class VSNReactor:
     def __init__(self, camera):
         self.__node_id = None
         self.__camera = camera
-        self.__flag_send_image = False  # default behavior - do not send the image data
+        self.__send_image = False  # Default behavior - do not send the image data
         self.__image_type = ImageType.foreground
 
         self.__client = VSNClient(Config.server['address'],
@@ -50,7 +50,7 @@ class VSNReactor:
 
         print(self.__activity_controller.get_state_as_string())
 
-        if self.__flag_send_image:
+        if self.__send_image:
             image_as_string = self.__encode_image_for_sending()
         else:
             image_as_string = None
@@ -59,7 +59,6 @@ class VSNReactor:
 
         self.__client.send(DataPacketToServer(percentage_of_active_pixels,
                                               self.__activity_controller.get_activation_level(),
-                                              self.__flag_send_image,
                                               image_as_string))
 
         time_after_sending_packet = time.perf_counter()
@@ -77,23 +76,19 @@ class VSNReactor:
         return image_as_string
 
     def __process_data_packet(self, packet):
-        print('Received data packet: ', packet.activation_neighbours, ',', packet.flag_send_image)
+        print('Received data packet:', packet.activation_neighbours)
 
         self.__activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )
-        self.__flag_send_image = packet.flag_send_image
 
     def __process_configuration_packet(self, packet):
         print('Received configuration packet: %r %r %r' % (packet.node_id, packet.parameters_below_threshold,
                                                            packet.parameters_above_threshold))
 
-        self.__image_type = packet.image_type
-
         self.__activity_controller = VSNActivityController(packet.parameters_below_threshold,
                                                            packet.parameters_above_threshold,
                                                            packet.activation_level_threshold)
-
         if packet.node_id is not None:
             # First configuration packet with node_id
             self.__node_id = packet.node_id
@@ -109,8 +104,12 @@ class VSNReactor:
         if self.__waiting_for_configuration:
             self.start()
 
+        if packet.send_image is not None:
+            self.__send_image = packet.send_image
+
     def start(self):
         if self.__node_id is not None:
+            self.__waiting_for_configuration = False
             self.__event_loop.call_later(self.__activity_controller.get_sample_time(), self.__do_regular_update)
         else:
             self.__waiting_for_configuration = True

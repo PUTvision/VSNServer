@@ -2,6 +2,7 @@ import pickle
 
 from server.VSNCamera import VSNCamera
 
+
 class VSNCameras:
     def __init__(self):
         # TODO: this should be automatically created or even put inside the CameraData class
@@ -25,7 +26,7 @@ class VSNCameras:
         self.cameras[camera_name].activation_neighbours = 0.0
         for idx in range(0, len(self.cameras) - 1):
             # idx+1 is used because cameras are numbered 1, 2, 3, 4, 5
-            current_camera_name = "picam" + str(idx + 1).zfill(2)
+            current_camera_name = 'picam' + str(idx + 1).zfill(2)
             self.cameras[camera_name].activation_neighbours += \
                 self.__dependency_table[camera_name][idx] * self.cameras[current_camera_name].percentage_of_active_pixels
 
@@ -33,12 +34,8 @@ class VSNCameras:
 
     def choose_camera_to_stream(self, camera_name):
         for key in self.cameras:
-            self.cameras[key].flag_send_image = False
-        self.cameras[str(camera_name)].flag_send_image = True
-
-    def get_flag_send_image(self, camera_number):
-        camera_name = self.__convert_camera_number_to_camera_name(camera_number)
-        return self.cameras[camera_name].flag_send_image
+            self.cameras[key].stop_sending_image()
+        self.cameras[str(camera_name)].start_sending_image()
 
     def get_activation_neighbours(self, camera_number):
         camera_name = self.__convert_camera_number_to_camera_name(camera_number)

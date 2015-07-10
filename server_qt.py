@@ -240,8 +240,7 @@ class SampleGUIServerWindow(QMainWindow):
     def service_client_data(self, white_pixels, activation_level, client):
         activation_neighbours = self.__cameras.update_state(client.id, activation_level, white_pixels)
 
-        packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours,
-                                                      self.__cameras.get_flag_send_image(client.id))
+        packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours)
         client.send(packet_to_send)
 
         # TODO: remove node index variable and use camera name instead

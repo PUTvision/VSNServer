@@ -2,9 +2,10 @@ from common.VSNUtility import Config
 
 
 class ConfigurationPacketToClient:
-    def __init__(self, node_id=None, image_type=None):
+    def __init__(self, node_id=None, send_image=None, image_type=None):
         self.node_id = node_id
         self.image_type = image_type
+        self.send_image = send_image
         self.hostname_based_ids = Config.clients['hostname_based_ids']
         self.image_size = Config.clients['image_size']
         self.frame_rate = Config.clients['frame_rate']
@@ -19,27 +20,23 @@ class ConfigurationPacketToServer:
 
 
 class DataPacketToServer:
-    def __init__(self, white_pixels, activation_level, flag_image_next, image=None):
+    def __init__(self, white_pixels, activation_level, image=None):
         self.white_pixels = white_pixels
         self.activation_level = activation_level
-        self.flag_image_next = flag_image_next
         self.image = image
 
-    def set(self, white_pixels, activation_level, flag_image_next, image=None):
+    def set(self, white_pixels, activation_level, image=None):
         self.white_pixels = white_pixels
         self.activation_level = activation_level
-        self.flag_image_next = flag_image_next
         self.image = image
 
 
 class DataPacketToClient:
-    def __init__(self, activation_neighbours, flag_send_image):
+    def __init__(self, activation_neighbours):
         self.activation_neighbours = activation_neighbours
-        self.flag_send_image = flag_send_image
 
-    def set(self, activation_neighbours, flag_send_image):
+    def set(self, activation_neighbours):
         self.activation_neighbours = activation_neighbours
-        self.flag_send_image = flag_send_image
 
 
 class ClientPacketRouter:
