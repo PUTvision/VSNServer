@@ -5,6 +5,8 @@ class ConfigurationPacketToClient:
     def __init__(self, node_id=None):
         self.node_id = node_id
         self.hostname_based_ids = Config.clients['hostname_based_ids']
+        self.image_size = Config.clients['image_size']
+        self.frame_rate = Config.clients['frame_rate']
         self.parameters_below_threshold = Config.clients['parameters_below_threshold']
         self.parameters_above_threshold = Config.clients['parameters_above_threshold']
         self.activation_level_threshold = Config.clients['activation_level_threshold']

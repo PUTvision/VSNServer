@@ -1,5 +1,3 @@
-__author__ = 'Amin'
-
 from common.VSNUtility import GainSampletimeTuple, ImageType, Config
 
 import pickle

@@ -1,5 +1,3 @@
-__author__ = 'Amin'
-
 import pyqtgraph as pg
 import numpy as np
 

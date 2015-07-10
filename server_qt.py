@@ -1,4 +1,4 @@
-__author__ = 'Amin'
+#!/usr/bin/env python
 
 import sys
 import time

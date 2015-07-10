@@ -1,5 +1,3 @@
-__author__ = 'Amin'
-
 from server.VSNCamerasData import VSNCameras
 
 from pyqtgraph.Qt import QtGui

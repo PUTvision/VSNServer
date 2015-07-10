@@ -1,5 +1,3 @@
-__author__ = 'Amin'
-
 import math
 
 from common.VSNUtility import GainSampletimeTuple
@@ -8,9 +6,9 @@ from common.VSNUtility import GainSampletimeTuple
 class VSNActivityController:
     def __init__(self, parameters_below_threshold, parameters_above_threshold, activation_level_threshold):
         self.__parameters_below_threshold = GainSampletimeTuple(parameters_below_threshold['gain'],
-                                                               parameters_below_threshold['sample_time'])
+                                                                parameters_below_threshold['sample_time'])
         self.__parameters_above_threshold = GainSampletimeTuple(parameters_above_threshold['gain'],
-                                                               parameters_above_threshold['sample_time'])
+                                                                parameters_above_threshold['sample_time'])
         self.__activation_level_threshold = activation_level_threshold
 
         self.__percentage_of_active_pixels = 0.0
@@ -91,23 +89,3 @@ class VSNActivityController:
                str(self.__parameters.gain) + \
                ', sample time: ' + \
                str(self.__parameters.sample_time)
-
-
-from common.VSNUtility import ImageType
-from client.VSNImageProcessing import VSNImageProcessing
-import cv2
-
-if __name__ == '__main__':
-    VSN_activity_controller = VSNActivityController()
-    VSN_image_processor = VSNImageProcessing()
-
-    key = 0
-    while key != 27:  # exit on ESC
-        # main loop
-        key = cv2.waitKey(int(VSN_activity_controller.get_sample_time() * 1000))
-        percentage_of_active_pixels_ = VSN_image_processor.get_percentage_of_active_pixels_in_new_frame_from_camera()
-        VSN_activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels_)
-        cv2.imshow('current frame', VSN_image_processor.get_image(ImageType.foreground))
-        print(VSN_activity_controller.get_state_as_string())
-
-    cv2.destroyAllWindows()
