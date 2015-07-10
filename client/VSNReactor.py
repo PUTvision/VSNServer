@@ -22,7 +22,8 @@ class VSNReactor:
 
         self.__client = VSNClient(Config.server['address'],
                                   Config.server['listening_port'],
-                                  ClientPacketRouter(self.__process_data_packet, self.__process_configuration_packet))
+                                  ClientPacketRouter(self.__process_data_packet, self.__process_configuration_packet,
+                                                     self.__process_disconnect_packet))
 
         self.__image_processor = VSNImageProcessor(camera.grab_image())
         self.__activity_controller = None
@@ -107,6 +108,9 @@ class VSNReactor:
         if packet.send_image is not None:
             self.__send_image = packet.send_image
 
+    def __process_disconnect_packet(self, packet):
+        self.__client.disconnect()
+
     def start(self):
         if self.__node_id is not None:
             self.__waiting_for_configuration = False
@@ -115,4 +119,7 @@ class VSNReactor:
             self.__waiting_for_configuration = True
 
         if not self.__event_loop.is_running():
-            self.__event_loop.run_forever()
+            try:
+                self.__event_loop.run_forever()
+            except KeyboardInterrupt:
+                exit(0)

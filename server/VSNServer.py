@@ -13,10 +13,12 @@ class VSNServer(server.TCPServer):
     def __init__(self, address: str, port: int,
                  client_connected_callback: callable([]),
                  client_disconnected_callback: callable([]),
+                 no_clients_left_callback: callable([]),
                  packet_router):
         self.__clients = []
         self.__client_connected_callback = client_connected_callback
         self.__client_disconnected_callback = client_disconnected_callback
+        self.__no_clients_left_callback = no_clients_left_callback
         self.__packet_router = packet_router
 
         self.__first_free_id = 1
@@ -40,6 +42,10 @@ class VSNServer(server.TCPServer):
         if client_id < self.__first_free_id:
             self.__first_free_id = client_id
 
+    def send_to_all_clients(self, obj: object):
+        for client in self.__clients:
+            client.send(obj)
+
     def client_connected(self, client: server.ConnectedClient):
         if not Config.clients['hostname_based_ids']:
             client.id = self.__find_free_id()
@@ -53,6 +59,9 @@ class VSNServer(server.TCPServer):
 
         self.__clients.remove(client)
         self.__client_disconnected_callback()
+
+        if len(self.__clients) == 0:
+            self.__no_clients_left_callback()
 
     def data_received(self, client, received_object: object):
         self.__packet_router.route_packet(client, received_object)

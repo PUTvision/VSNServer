@@ -27,13 +27,16 @@ class TCPClient(metaclass=ABCMeta):
 
     @asyncio.coroutine
     def __receive(self):
-        while True:
-            encoded_length = yield from self.reader.readexactly(4)
-            length = int.from_bytes(encoded_length, byteorder='big')
+        try:
+            while True:
+                encoded_length = yield from self.reader.readexactly(4)
+                length = int.from_bytes(encoded_length, byteorder='big')
 
-            pickled_obj = yield from self.reader.readexactly(length)
-            obj = pickle.loads(pickled_obj)
-            self.data_received(obj)
+                pickled_obj = yield from self.reader.readexactly(length)
+                obj = pickle.loads(pickled_obj)
+                self.data_received(obj)
+        except asyncio.streams.IncompleteReadError:
+            pass  # TODO: this exception should be handled either by client shutdown or reconnect attempt
 
     def send(self, object_to_send: object):
         self.loop.create_task(self.__send(object_to_send))

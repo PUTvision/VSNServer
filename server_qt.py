@@ -53,6 +53,7 @@ class SampleGUIServerWindow(QMainWindow):
         self.__cameras = VSNCameras()
 
         self.__event_loop = event_loop
+        self.__exit_requested = False
 
     def create_server(self):
         self.server = VSNServer(
@@ -60,6 +61,7 @@ class SampleGUIServerWindow(QMainWindow):
             Config.server['listening_port'],
             self.on_client_connection_made,
             self.on_client_connection_lost,
+            self.on_no_clients_left,
             VSNPacket.ServerPacketRouter(self.on_client_data_received, self.on_client_configuration_received)
         )
         self.log('Connecting...')
@@ -212,6 +214,11 @@ class SampleGUIServerWindow(QMainWindow):
     def on_client_connection_lost(self):
         self.log('Client disconnected')
 
+    def on_no_clients_left(self):
+        if self.__exit_requested:
+            self.server.stop()
+            self.__event_loop.stop()
+
     def on_client_data_received(self, client, packet: VSNPacket.DataPacketToServer):
         self.log('Received data')
 
@@ -258,8 +265,8 @@ class SampleGUIServerWindow(QMainWindow):
         self.log_widget.append(timestamp + ' ' + str(msg))
 
     def closeEvent(self, e):
-        self.server.stop()
-        self.__event_loop.stop()
+        self.__exit_requested = True
+        self.server.send_to_all_clients(VSNPacket.DisconnectPacket())
 
 
 if __name__ == '__main__':
