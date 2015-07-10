@@ -34,7 +34,8 @@ class VSNCameras:
 
     def choose_camera_to_stream(self, camera_name):
         for key in self.cameras:
-            self.cameras[key].stop_sending_image()
+            if key != camera_name:
+                self.cameras[key].stop_sending_image()
         self.cameras[str(camera_name)].start_sending_image()
 
     def get_activation_neighbours(self, camera_number):
