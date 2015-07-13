@@ -55,7 +55,7 @@ class TCPServer(metaclass=ABCMeta):
                 obj = pickle.loads(pickled_obj)
 
                 self.data_received(client, obj)
-        except asyncio.streams.IncompleteReadError:
+        except (asyncio.streams.IncompleteReadError, ConnectionResetError):
             self.client_disconnected(client)
 
     def stop(self):

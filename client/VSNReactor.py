@@ -28,6 +28,7 @@ class VSNReactor:
         self.__image_processor = VSNImageProcessor(camera.grab_image())
         self.__activity_controller = None
 
+        self.__update_task = None
         self.__do_regular_update_time = 0
 
         self.__event_loop = asyncio.get_event_loop()
@@ -38,8 +39,10 @@ class VSNReactor:
         current_time = time.perf_counter()
         print('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' % ((current_time - self.__do_regular_update_time) * 1000))
         self.__do_regular_update_time = current_time
-        # queue the next call to itself
-        self.__event_loop.call_later(self.__activity_controller.get_sample_time(), self.__do_regular_update)
+
+        # Queue the next call
+        self.__update_task = self.__event_loop.call_later(self.__activity_controller.get_sample_time(),
+                                                          self.__do_regular_update)
 
         time_start = time.perf_counter()
 
@@ -112,12 +115,14 @@ class VSNReactor:
             self.__send_image = packet.send_image
 
     def __process_disconnect_packet(self, packet):
+        self.__update_task.cancel()
         self.__client.disconnect()
 
     def start(self):
         if self.__node_id is not None:
             self.__waiting_for_configuration = False
-            self.__event_loop.call_later(self.__activity_controller.get_sample_time(), self.__do_regular_update)
+            self.__update_task = self.__event_loop.call_later(self.__activity_controller.get_sample_time(),
+                                                              self.__do_regular_update)
         else:
             self.__waiting_for_configuration = True
 

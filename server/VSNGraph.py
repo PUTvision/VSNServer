@@ -42,6 +42,9 @@ class VSNGraphController:
             if i < len(self._graphs):
                 graph.update_graph(self._activations[i], self._percentages[i])
 
+    def close(self):
+        self._win.close()
+
 
 class VSNGraph:
     def __init__(self, camera_number):

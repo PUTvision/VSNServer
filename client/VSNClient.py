@@ -10,5 +10,8 @@ class VSNClient(client.TCPClient):
     def connection_made(self):
         pass
 
+    def connection_lost(self):
+        self._loop.stop()
+
     def data_received(self, received_object: object):
         self.__packet_router.route_packet(received_object)

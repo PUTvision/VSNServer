@@ -45,6 +45,7 @@ class SampleGUIServerWindow(QMainWindow):
         super(SampleGUIServerWindow, self).__init__(parent)
 
         self.__graphsController = None
+        self.__plot_timer = QtCore.QTimer(self)
 
         self.create_main_frame()
         self.create_server()
@@ -133,9 +134,8 @@ class SampleGUIServerWindow(QMainWindow):
         self.__graphsController.add_new_graph()
         self.__graphsController.add_new_graph()
 
-        timer_plot = QtCore.QTimer(self)
-        timer_plot.timeout.connect(self.__graphsController.update_graphs)
-        timer_plot.start(200)
+        self.__plot_timer.timeout.connect(self.__graphsController.update_graphs)
+        self.__plot_timer.start(200)
 
     def _create_status_monitor(self):
         vbox = QtGui.QVBoxLayout()
@@ -184,9 +184,12 @@ class SampleGUIServerWindow(QMainWindow):
         self._picam_labels[camera_name].setText(status)
 
     def on_choose_clicked(self):
-        self.__cameras.choose_camera_to_stream(self.combo_box_cameras.currentText())
-        self.__cameras.set_image_type(self.combo_box_cameras.currentText(),
-                                      ImageType[self.combo_box_image_types.currentText()])
+        try:
+            self.__cameras.choose_camera_to_stream(self.combo_box_cameras.currentText())
+            self.__cameras.set_image_type(self.combo_box_cameras.currentText(),
+                                          ImageType[self.combo_box_image_types.currentText()])
+        except KeyError:
+            print('%s is not available' % self.combo_box_cameras.currentText())
 
     def on_doit(self):
         # tests
@@ -274,6 +277,8 @@ class SampleGUIServerWindow(QMainWindow):
             self.server.send_to_all_clients(VSNPacket.DisconnectPacket())
         else:
             self.server.stop()
+            self.__plot_timer.stop()
+            self.__graphsController.close()
             self.__event_loop.stop()
 
 if __name__ == '__main__':
