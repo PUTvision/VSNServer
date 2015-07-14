@@ -16,8 +16,8 @@ class VSNCamera(metaclass=ABCMeta):
 class VSNCVCamera:
     def __init__(self, camera_number: int):
         self.__camera = cv2.VideoCapture(camera_number)
-        self.__camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-        self.__camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+        self.__camera.set(cv2.CAP_PROP_FRAME_WIDTH, Config.clients['image_size']['width'])
+        self.__camera.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.clients['image_size']['height'])
 
     def grab_image(self, slow_mode=False):
         if slow_mode:
