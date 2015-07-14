@@ -47,7 +47,7 @@ class VSNReactor:
         time_start = time.perf_counter()
 
         percentage_of_active_pixels = self.__image_processor.get_percentage_of_active_pixels_in_frame(
-            self.__camera.grab_image())
+            self.__camera.grab_image(slow_mode=self.__activity_controller.is_activation_below_threshold()))
         self.__activity_controller.update_sensor_state_based_on_captured_image(percentage_of_active_pixels)
 
         time_after_get_percentage = time.perf_counter()

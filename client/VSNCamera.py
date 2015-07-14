@@ -9,7 +9,7 @@ from common.VSNUtility import Config
 
 class VSNCamera(metaclass=ABCMeta):
     @abstractmethod
-    def grab_image(self):
+    def grab_image(self, slow_mode=False):
         ...
 
 
@@ -19,7 +19,12 @@ class VSNCVCamera:
         self.__camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
         self.__camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
-    def grab_image(self):
+    def grab_image(self, slow_mode=False):
+        if slow_mode:
+            # 5 frames buffer workaround
+            for _ in range(0, 5):
+                self.__camera.read()
+
         return self.__camera.read()[1]
 
 
@@ -50,7 +55,7 @@ class VSNPiCamera:
         self.__stream.truncate(0)
         self.__camera.capture(self.__stream, format='bgr', use_video_port=True)
 
-    def grab_image(self):
+    def grab_image(self, slow_mode=False):
         try:
             self.__current_capture_thread.join()
         except AttributeError:
