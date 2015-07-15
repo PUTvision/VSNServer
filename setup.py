@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 
-import sys
 from setuptools import setup
-
-try:
-    import PyQt4
-except ImportError:
-    sys.exit('PyQt4 is required to install this package')
 
 with open('./requirements.txt') as requirements_txt:
     requirements = [line for line in requirements_txt]
