@@ -6,8 +6,11 @@ import asyncio
 import numpy as np
 import cv2
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
+except ImportError:
+    sys.exit('PyQt4 is required to run server app')
 
 from quamash import QEventLoop
 from pyqtgraph.Qt import QtGui, QtCore
