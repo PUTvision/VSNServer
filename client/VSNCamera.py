@@ -43,7 +43,8 @@ class VSNPiCamera:
 
         self.__camera.resolution = (Config.clients['image_size']['width'], Config.clients['image_size']['height'])
         self.__camera.framerate = Config.clients['frame_rate']
-        self.__stream = picamera.array.PiRGBArray(self.__camera, size=(320, 240))
+        self.__stream = picamera.array.PiRGBArray(self.__camera, size=(Config.clients['image_size']['width'],
+                                                                       Config.clients['image_size']['height']))
         self.__current_capture_thread = None
 
         self.__camera.start_preview()
