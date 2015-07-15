@@ -5,6 +5,7 @@ import time
 import asyncio
 import numpy as np
 import cv2
+import argparse
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -280,6 +281,7 @@ class SampleGUIServerWindow(QMainWindow):
             self.__plot_timer.stop()
             self.__graphsController.close()
             self.__event_loop.stop()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

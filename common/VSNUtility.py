@@ -1,15 +1,24 @@
-from enum import Enum
 import yaml
+import os
+import sys
+from enum import Enum
 
 from common.decorators import autoinitialized
+
 
 @autoinitialized
 class Config:
     @classmethod
     def initialize(cls):
-        with open('config.yml', 'r') as stream:
-            for key, value in yaml.load(stream).items():
-                setattr(cls, key, value)
+        for loc in os.curdir, os.path.expanduser('~/.config/vsn'), '/etc/vsn':
+            try:
+                with open(os.path.join(loc, 'vsn_config.yml')) as stream:
+                    for key, value in yaml.load(stream).items():
+                        setattr(cls, key, value)
+                return
+            except IOError:
+                pass
+        sys.exit('Could not find configuration file')
 
 
 class GainSampletimeTuple:
