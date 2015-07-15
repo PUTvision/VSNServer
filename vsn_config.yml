@@ -1,0 +1,23 @@
+server:
+  address: '127.0.0.1'
+  listening_address: '0.0.0.0'
+  listening_port: 50001
+
+clients:
+  hostname_based_ids: False
+
+  image_size:
+    width: 320
+    height: 240
+
+  frame_rate: 20
+
+  parameters_below_threshold:
+    gain:
+    sample_time: 1
+
+  parameters_above_threshold:
+    gain: 0.1
+    sample_time: 0.1
+
+  activation_level_threshold: 15
