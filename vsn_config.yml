@@ -4,7 +4,7 @@ server:
   listening_port: 50001
 
 clients:
-  hostname_based_ids: False
+  hostname_based_ids: True
 
   image_size:
     width: 320
@@ -13,7 +13,7 @@ clients:
   frame_rate: 20
 
   parameters_below_threshold:
-    gain:
+    gain: 2
     sample_time: 1
 
   parameters_above_threshold:
