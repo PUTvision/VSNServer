@@ -54,7 +54,7 @@ class VSNImageProcessor:
         mask_lt = cv2.compare(self.__background_image, self.__foreground_image, cv2.CMP_LT)
 
         # update the background
-        self.__background_image += mask_lt / 128.0
-        self.__background_image -= mask_gt / 128.0
+        self.__background_image += mask_lt >> 7
+        self.__background_image -= mask_gt >> 7
 
         return percentage_of_nonzero_pixels
