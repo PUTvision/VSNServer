@@ -23,9 +23,11 @@ class VSNCVCamera:
         if slow_mode:
             # 5 frames buffer workaround
             for _ in range(0, 5):
-                self.__camera.read()
+                self.__camera.grab()
+        else:
+            self.__camera.grab()
 
-        return self.__camera.read()[1]
+        return self.__camera.retrieve()[1]
 
 
 class VSNPiCamera:
