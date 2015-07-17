@@ -4,73 +4,74 @@ import numpy as np
 
 class VSNGraphController:
     def __init__(self):
-        self._graphs = []
-        self._win = None
-        # TODO: remove this temporary buffers, put them into VSNGraph class and add appropriate methods
-        # current activation level
-        self._activations = np.zeros((5, 1))
-        # white pixel percentage
-        self._percentages = np.zeros((5, 1))
+        self.__graphs = []
+        self.__graphs_ids = set()
 
-    def create_graph_window(self):
+        # current activation level
+        self.__activations = np.zeros((5, 1))
+        # white pixel percentage
+        self.__percentages = np.zeros((5, 1))
+
         # set default background color to white
         pg.setConfigOption('background', 'w')
         # open the plot window, set properties
-        self._win = pg.GraphicsWindow(title='VSN activity monitor')
-        self._win.resize(1400, 800)
-
-        for i, graph in enumerate(self._graphs):
-            if i > 0 and i % 2 == 0:
-                self._win.nextRow()
-            graph.add_graph(self._win)
-
-    def add_new_graph(self):
-        graph_number = len(self._graphs)
-        new_graph = VSNGraph(graph_number)
-        if len(self._graphs) % 2 == 0:
-            self._win.nextRow()
-        new_graph.add_graph(self._win)
-        self._graphs.append(new_graph)
-
-    def set_new_values(self, index, activation, percentage):
-        self._activations[index] = activation
-        self._percentages[index] = percentage
+        self.__win = pg.GraphicsWindow(title='VSN activity monitor')
+        self.__win.resize(1400, 800)
 
     def update_graphs(self):
-        # TODO: remove this limitation to four objects
-        for i, graph in enumerate(self._graphs):
-            if i < len(self._graphs):
-                graph.update_graph(self._activations[i], self._percentages[i])
+        for graph in self.__graphs:
+            graph_id = graph.id
+            graph.update_graph(self.__activations[graph_id], self.__percentages[graph_id])
+
+    def add_graph(self, camera_id: int):
+        if camera_id not in self.__graphs_ids:
+            new_graph = VSNGraph(camera_id)
+
+            if len(self.__graphs) % 2 == 0:
+                self.__win.nextRow()
+
+            new_graph.add_graph(self.__win)
+            self.__graphs.append(new_graph)
+            self.__graphs_ids.add(camera_id)
+
+    def set_new_values(self, index, activation, percentage):
+        self.__activations[index] = activation
+        self.__percentages[index] = percentage
 
     def close(self):
-        self._win.close()
+        self.__win.close()
 
 
 class VSNGraph:
-    def __init__(self, camera_number):
-        self.plot_title = 'picam' + str(camera_number)
+    def __init__(self, camera_id):
+        self.__id = camera_id
+        self.__plot_title = 'picam' + str(camera_id)
 
-        self.white_pixels_percentage = np.zeros(1)
+        self.__white_pixels_percentage = np.zeros(1)
         # self.neighbouring_node_activation_level = 0.0
-        self.activation_level_history = np.zeros(200)
+        self.__activation_level_history = np.zeros(200)
 
         # graph elements
-        self._curve = None
-        self._bar = None
+        self.__curve = None
+        self.__bar = None
+
+    @property
+    def id(self):
+        return self.__id
 
     def add_graph(self, window):
         # setup plot
-        cam_plot = window.addPlot(title=self.plot_title)
-        self._curve = cam_plot.plot(pen='r')
-        self._bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot.addItem(self._bar)
+        cam_plot = window.addPlot(title=self.__plot_title)
+        self.__curve = cam_plot.plot(pen='r')
+        self.__bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
+        cam_plot.addItem(self.__bar)
         # set the scale of the plot
         cam_plot.setYRange(0, 200)
 
     def update_graph(self, activation_level, white_pixels_percentage):
-        self.white_pixels_percentage = white_pixels_percentage
-        self._bar.setData([0, 20], self.white_pixels_percentage)
+        self.__white_pixels_percentage = white_pixels_percentage
+        self.__bar.setData([0, 20], self.__white_pixels_percentage)
 
-        self.activation_level_history = np.roll(self.activation_level_history, -1)
-        self.activation_level_history[199] = activation_level
-        self._curve.setData(self.activation_level_history)
+        self.__activation_level_history = np.roll(self.__activation_level_history, -1)
+        self.__activation_level_history[199] = activation_level
+        self.__curve.setData(self.__activation_level_history)

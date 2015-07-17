@@ -47,7 +47,7 @@ class SampleGUIServerWindow(QMainWindow):
 
         super(SampleGUIServerWindow, self).__init__(parent)
 
-        self.__graphsController = None
+        self.__graphs_controller = None
         self.__plot_timer = QtCore.QTimer(self)
 
         self.create_main_frame()
@@ -129,15 +129,9 @@ class SampleGUIServerWindow(QMainWindow):
         self.setCentralWidget(main_frame)
 
     def create_graphs(self):
-        self.__graphsController = VSNGraphController()
-        self.__graphsController.create_graph_window()
-        self.__graphsController.add_new_graph()
-        self.__graphsController.add_new_graph()
-        self.__graphsController.add_new_graph()
-        self.__graphsController.add_new_graph()
-        self.__graphsController.add_new_graph()
+        self.__graphs_controller = VSNGraphController()
 
-        self.__plot_timer.timeout.connect(self.__graphsController.update_graphs)
+        self.__plot_timer.timeout.connect(self.__graphs_controller.update_graphs)
         self.__plot_timer.start(200)
 
     def _create_status_monitor(self):
@@ -218,6 +212,7 @@ class SampleGUIServerWindow(QMainWindow):
         else:
             client.send(VSNPacket.ConfigurationPacketToClient(client.id))
             self.__cameras.add_camera(client)
+            self.__graphs_controller.add_graph(client.id)
 
     def on_client_connection_lost(self):
         self.log('Client disconnected')
@@ -245,6 +240,7 @@ class SampleGUIServerWindow(QMainWindow):
         self.log('Received client configuration')
         client.id = packet.node_id
         self.__cameras.add_camera(client)
+        self.__graphs_controller.add_graph(client.id)
 
     def service_client_image(self, image_as_string: str):
         data = np.fromstring(image_as_string, dtype='uint8')
@@ -260,10 +256,8 @@ class SampleGUIServerWindow(QMainWindow):
         packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours)
         client.send(packet_to_send)
 
-        # TODO: remove node index variable and use camera name instead
-        node_index = client.id - 1
-        self.__graphsController.set_new_values(
-            node_index,
+        self.__graphs_controller.set_new_values(
+            client.id,
             activation_level + activation_neighbours,
             white_pixels
         )
@@ -281,7 +275,7 @@ class SampleGUIServerWindow(QMainWindow):
         else:
             self.server.stop()
             self.__plot_timer.stop()
-            self.__graphsController.close()
+            self.__graphs_controller.close()
             self.__event_loop.stop()
 
 
