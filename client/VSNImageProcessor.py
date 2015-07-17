@@ -1,7 +1,6 @@
 import cv2
 
 from common.VSNUtility import ImageType
-from client.VSNCamera import VSNCamera as Camera
 
 
 class VSNImageProcessor:
