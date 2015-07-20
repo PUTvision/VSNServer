@@ -20,7 +20,7 @@ class VSNCameras:
         self.__cameras[camera_name].activation_neighbours = 0.0
         for current_camera_name, camera in self.__cameras.items():
             self.__cameras[camera_name].activation_neighbours += \
-                self.__dependency_table[camera_name][camera.id] * \
+                self.__dependency_table[camera_name][camera.id - 1] * \
                 self.__cameras[current_camera_name].percentage_of_active_pixels
 
         return self.__cameras[camera_name].activation_neighbours
@@ -69,7 +69,6 @@ class VSNCameras:
 
     def update_state(self, camera_number, activation_level, percentage_of_active_pixels):
         camera_name = self.__convert_camera_number_to_camera_name(camera_number)
-
         self.__cameras[camera_name].update(activation_level, percentage_of_active_pixels)
 
         return self.__calculate_neighbour_activation_level(camera_name)
