@@ -21,3 +21,35 @@ clients:
     sample_time: 0.1
 
   activation_level_threshold: 15
+
+dependencies:
+  picam01:
+    - 0.0
+    - 0.5
+    - 0.2
+    - 0.0
+    - 0.0
+  picam02:
+    - 0.5
+    - 0.0
+    - 0.5
+    - 0.1
+    - 0.0
+  picam03:
+    - 0.1
+    - 0.5
+    - 0.0
+    - 0.5
+    - 0.2
+  picam04:
+    - 0.0
+    - 0.1
+    - 0.5
+    - 0.0
+    - 0.5
+  picam05:
+    - 0.0
+    - 0.0
+    - 0.2
+    - 0.5
+    - 0.0
