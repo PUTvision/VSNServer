@@ -26,10 +26,6 @@ class VSNGraphController:
     def add_graph(self, camera_id: int):
         if camera_id not in self.__graphs_ids:
             new_graph = VSNGraph(camera_id)
-
-            if len(self.__graphs) % 2 == 0:
-                self.__win.nextRow()
-
             new_graph.add_graph(self.__win)
             self.__graphs.append(new_graph)
             self.__graphs_ids.add(camera_id)
@@ -45,7 +41,7 @@ class VSNGraphController:
 class VSNGraph:
     def __init__(self, camera_id):
         self.__id = camera_id
-        self.__plot_title = 'picam' + str(camera_id)
+        self.__plot_title = 'picam' + str(camera_id).zfill(2)
 
         self.__white_pixels_percentage = np.zeros(1)
         # self.neighbouring_node_activation_level = 0.0
@@ -61,7 +57,7 @@ class VSNGraph:
 
     def add_graph(self, window):
         # setup plot
-        cam_plot = window.addPlot(title=self.__plot_title)
+        cam_plot = window.addPlot(title=self.__plot_title, row=(self.__id - 1) // 2, col=(self.__id - 1) % 2)
         self.__curve = cam_plot.plot(pen='r')
         self.__bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
         cam_plot.addItem(self.__bar)

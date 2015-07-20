@@ -58,7 +58,7 @@ class VSNServer(server.TCPServer):
             self.__free_id(client.id)
 
         self.__clients.remove(client)
-        self.__client_disconnected_callback()
+        self.__client_disconnected_callback(client)
 
         if len(self.__clients) == 0:
             self.__no_clients_left_callback()

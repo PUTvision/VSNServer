@@ -9,6 +9,8 @@ class ConnectedClient:
         self.__writer = writer
         self.__address, self.__port = writer.get_extra_info('peername')
 
+        self.id = None
+
     def __del__(self):
         try:
             self.__writer.close()
