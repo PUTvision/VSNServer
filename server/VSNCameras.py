@@ -1,19 +1,10 @@
-import pickle
-
 from server.VSNCamera import VSNCamera
+from common.VSNUtility import Config
 
 
 class VSNCameras:
     def __init__(self):
-        # TODO: this should be automatically created or even put inside the CameraData class
-        self.__dependency_table = {
-            'picam01': [0.0, 0.5, 0.2, 0.0, 0.0],
-            'picam02': [0.5, 0.0, 0.5, 0.1, 0.0],
-            'picam03': [0.1, 0.5, 0.0, 0.5, 0.2],
-            'picam04': [0.0, 0.1, 0.5, 0.0, 0.5],
-            'picam05': [0.0, 0.0, 0.2, 0.5, 0.0]
-        }
-
+        self.__dependency_table = Config.dependencies
         self.__cameras = {}
 
     @property
