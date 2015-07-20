@@ -146,11 +146,11 @@ class SampleGUIServerWindow(QMainWindow):
         self.combo_box_image_types = QComboBox()
         self.combo_box_image_types.addItems(image_types)
 
-        self.button_choose = QPushButton('choose')
+        self.button_choose = QPushButton('Send settings')
         self.button_choose.clicked.connect(self.on_choose_clicked)
 
-        self.doit_button = QPushButton('Do it!')
-        self.doit_button.clicked.connect(self.on_doit)
+        self.save_history_button = QPushButton('Save history')
+        self.save_history_button.clicked.connect(self.on_save_history)
 
         self.clear_history_button = QPushButton('Clear history')
         self.clear_history_button.clicked.connect(self.on_clear_history)
@@ -158,7 +158,7 @@ class SampleGUIServerWindow(QMainWindow):
         hbox_row_2.addWidget(self.combo_box_cameras)
         hbox_row_2.addWidget(self.combo_box_image_types)
         hbox_row_2.addWidget(self.button_choose)
-        hbox_row_2.addWidget(self.doit_button)
+        hbox_row_2.addWidget(self.save_history_button)
         hbox_row_2.addWidget(self.clear_history_button)
 
         # TODO: add combo box and QLineEdit to set all the parameters
@@ -188,7 +188,7 @@ class SampleGUIServerWindow(QMainWindow):
         except KeyError:
             print('%s is not available' % self.combo_box_cameras.currentText())
 
-    def on_doit(self):
+    def on_save_history(self):
         self.__cameras.save_cameras_data_to_files()
 
     def on_clear_history(self):
