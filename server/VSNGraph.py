@@ -8,9 +8,9 @@ class VSNGraphController:
         self.__graphs_ids = set()
 
         # current activation level
-        self.__activations = np.zeros((5, 1))
+        self.__activations = np.zeros((30, 1))
         # white pixel percentage
-        self.__percentages = np.zeros((5, 1))
+        self.__percentages = np.zeros((30, 1))
 
         # set default background color to white
         pg.setConfigOption('background', 'w')
