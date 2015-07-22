@@ -8,9 +8,9 @@ import time
 from client.VSNImageProcessor import VSNImageProcessor
 from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import DataPacketToServer, ClientPacketRouter, ConfigurationPacketToServer
-
 from client.VSNClient import VSNClient
 from common.VSNUtility import ImageType, Config
+from connectivity import multicast
 
 
 class VSNReactor:
@@ -20,7 +20,7 @@ class VSNReactor:
         self.__send_image = False  # Default behavior - do not send the image data
         self.__image_type = ImageType.foreground
 
-        self.__client = VSNClient(Config.server['address'],
+        self.__client = VSNClient(multicast.Client().receive_ip(),
                                   Config.server['listening_port'],
                                   ClientPacketRouter(self.__process_data_packet, self.__process_configuration_packet,
                                                      self.__process_disconnect_packet))

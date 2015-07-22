@@ -1,5 +1,4 @@
 server:
-  address: '127.0.0.1'
   listening_address: '0.0.0.0'
   listening_port: 50001
 
