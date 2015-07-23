@@ -3,6 +3,7 @@ import time
 
 from abc import ABCMeta, abstractmethod
 from threading import Thread
+from subprocess import check_call, CalledProcessError
 
 from common.VSNUtility import Config
 
@@ -18,6 +19,17 @@ class VSNCVCamera:
         self.__camera = cv2.VideoCapture(camera_number)
         self.__camera.set(cv2.CAP_PROP_FRAME_WIDTH, Config.clients['image_size']['width'])
         self.__camera.set(cv2.CAP_PROP_FRAME_HEIGHT, Config.clients['image_size']['height'])
+
+        # OpenCV support for setting v4l2 controls is broken
+        try:
+            check_call(['v4l2-ctl', '-c', 'exposure_auto=1'])  # For some web cameras
+        except CalledProcessError:
+            print('Device does not provide exposure_auto control')
+
+        try:
+            check_call(['v4l2-ctl', '-c', 'auto_exposure=1'])  # For RPi camera
+        except CalledProcessError:
+            print('Device does not provide auto_exposure control')
 
     def grab_image(self, slow_mode=False):
         if slow_mode:
