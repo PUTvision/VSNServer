@@ -5,6 +5,9 @@ import time
 import asyncio
 import numpy as np
 import cv2
+import logging
+
+logging.basicConfig(level=logging.WARNING)
 
 try:
     from PyQt4.QtCore import *
@@ -188,7 +191,7 @@ class SampleGUIServerWindow(QMainWindow):
             self.__cameras.set_image_type(self.combo_box_cameras.currentText(),
                                           ImageType[self.combo_box_image_types.currentText()])
         except KeyError:
-            print('%s is not available' % self.combo_box_cameras.currentText())
+            logging.warning('%s is not available' % self.combo_box_cameras.currentText())
 
     def on_save_history(self):
         self.__cameras.save_cameras_data_to_files()

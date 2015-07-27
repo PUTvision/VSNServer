@@ -1,5 +1,6 @@
 import cv2
 import time
+import logging
 
 from abc import ABCMeta, abstractmethod
 from threading import Thread
@@ -24,12 +25,12 @@ class VSNCVCamera:
         try:
             check_call(['v4l2-ctl', '-c', 'exposure_auto=1'])  # For some web cameras
         except CalledProcessError:
-            print('Device does not provide exposure_auto control')
+            logging.warning('Device does not provide exposure_auto control')
 
         try:
             check_call(['v4l2-ctl', '-c', 'auto_exposure=1'])  # For RPi camera
         except CalledProcessError:
-            print('Device does not provide auto_exposure control')
+            logging.warning('Device does not provide auto_exposure control')
 
     def grab_image(self, slow_mode=False):
         if slow_mode:
@@ -60,9 +61,6 @@ class VSNPiCamera:
         self.__stream = picamera.array.PiRGBArray(self.__camera, size=(Config.clients['image_size']['width'],
                                                                        Config.clients['image_size']['height']))
         self.__current_capture_thread = None
-
-        self.__camera.start_preview()
-        print('Camera started')
 
         self.__camera.capture(self.__stream, format='bgr', use_video_port=True)
 

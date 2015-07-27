@@ -1,5 +1,5 @@
 import asyncio
-
+import logging
 import socket
 import cv2
 import numpy
@@ -37,7 +37,8 @@ class VSNReactor:
 
     def __do_regular_update(self):
         current_time = time.perf_counter()
-        print('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' % ((current_time - self.__do_regular_update_time) * 1000))
+        logging.debug('\nPREVIOUS REGULAR UPDATE WAS %.2f ms AGO' %
+                      ((current_time - self.__do_regular_update_time) * 1000))
         self.__do_regular_update_time = current_time
 
         # Queue the next call
@@ -52,7 +53,7 @@ class VSNReactor:
 
         time_after_get_percentage = time.perf_counter()
 
-        print(self.__activity_controller.get_state_as_string())
+        logging.debug(self.__activity_controller.get_state_as_string())
 
         if self.__send_image:
             image_as_string = self.__encode_image_for_sending()
@@ -67,9 +68,9 @@ class VSNReactor:
 
         time_after_sending_packet = time.perf_counter()
 
-        print('Calculating percentage took: %.2f ms' % ((time_after_get_percentage - time_start) * 1000))
-        print('Encoding took: %.2f ms' % ((time_after_encoding - time_after_get_percentage) * 1000))
-        print('Sending packet took: %.2f ms' % ((time_after_sending_packet - time_after_encoding) * 1000))
+        logging.debug('Calculating percentage took: %.2f ms' % ((time_after_get_percentage - time_start) * 1000))
+        logging.debug('Encoding took: %.2f ms' % ((time_after_encoding - time_after_get_percentage) * 1000))
+        logging.debug('Sending packet took: %.2f ms' % ((time_after_sending_packet - time_after_encoding) * 1000))
 
     def __encode_image_for_sending(self):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
@@ -80,14 +81,14 @@ class VSNReactor:
         return image_as_string
 
     def __process_data_packet(self, packet):
-        print('Received data packet:', packet.activation_neighbours)
+        logging.debug('Received data packet:', packet.activation_neighbours)
 
         self.__activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
         )
 
     def __process_configuration_packet(self, packet):
-        print('Received configuration packet: %r %r %r' % (packet.node_id, packet.parameters_below_threshold,
+        logging.debug('Received configuration packet: %r %r %r' % (packet.node_id, packet.parameters_below_threshold,
                                                            packet.parameters_above_threshold))
 
         self.__activity_controller = VSNActivityController(packet.parameters_below_threshold,
@@ -102,7 +103,7 @@ class VSNReactor:
                 self.__node_id = int(''.join(x for x in socket.gethostname() if x.isdigit()))
                 self.__client.send(ConfigurationPacketToServer(self.__node_id))
             except ValueError:
-                print('Client hostname does not provide camera number - exiting')
+                logging.critical('Client hostname does not provide camera number - exiting')
                 self.__event_loop.stop()
 
         if self.__waiting_for_configuration:
