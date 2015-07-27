@@ -13,7 +13,7 @@ class ConnectedClient:
 
     def __del__(self):
         try:
-            self.__writer.close()
+            self.disconnect()
         except RuntimeError:
             pass
 
@@ -32,6 +32,9 @@ class ConnectedClient:
 
     def send(self, object_to_send: object):
         self.__loop.create_task(self.__send(object_to_send))
+
+    def disconnect(self):
+        self.__writer.close()
 
 
 class TCPServer(metaclass=ABCMeta):

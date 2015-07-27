@@ -140,3 +140,6 @@ class VSNCamera:
     def save_camera_history_to_file(self, file):
         pickle.dump(self.__camera_history, file)
 
+    def update_software(self, pkgs_to_update: list):
+        self.__client.send(ConfigurationPacketToClient(pkgs_to_update=pkgs_to_update))
+

@@ -5,11 +5,13 @@ import cv2
 import numpy
 import time
 
+from client.VSNUpdater import VSNUpdater
 from client.VSNImageProcessor import VSNImageProcessor
 from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import DataPacketToServer, ClientPacketRouter, ConfigurationPacketToServer
 from client.VSNClient import VSNClient
 from common.VSNUtility import ImageType, Config
+from common.version import __version__
 from connectivity import multicast
 
 
@@ -81,7 +83,7 @@ class VSNReactor:
         return image_as_string
 
     def __process_data_packet(self, packet):
-        logging.debug('Received data packet:', packet.activation_neighbours)
+        logging.debug('Received neighbour activation: %.2f' % packet.activation_neighbours)
 
         self.__activity_controller.set_params(
             activation_neighbours=packet.activation_neighbours
@@ -97,14 +99,15 @@ class VSNReactor:
         if packet.node_id is not None:
             # First configuration packet with node_id
             self.__node_id = packet.node_id
+            self.__client.send(ConfigurationPacketToServer(self.__node_id, __version__))
         elif self.__node_id is None and packet.hostname_based_ids:
             # First configuration packet without node_id
             try:
                 self.__node_id = int(''.join(x for x in socket.gethostname() if x.isdigit()))
-                self.__client.send(ConfigurationPacketToServer(self.__node_id))
+                self.__client.send(ConfigurationPacketToServer(self.__node_id, __version__))
             except ValueError:
                 logging.critical('Client hostname does not provide camera number - exiting')
-                self.__event_loop.stop()
+                self.__client.disconnect()
 
         if self.__waiting_for_configuration:
             self.start()
@@ -114,6 +117,13 @@ class VSNReactor:
 
         if packet.send_image is not None:
             self.__send_image = packet.send_image
+
+        if packet.pkgs_to_update is not None:
+            self.__update_task.cancel()
+            self.__client.disconnect()
+
+            updater = VSNUpdater(packet.pkgs_to_update)
+            updater.update()
 
     def __process_disconnect_packet(self, packet):
         self.__update_task.cancel()

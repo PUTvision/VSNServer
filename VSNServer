@@ -38,6 +38,7 @@ class LogWidget(QTextBrowser):
         palette.setColor(QPalette.Base, QColor('#ddddfd'))
         self.setPalette(palette)
 
+
 # TODO:
 # ability to change gain and sample time on the fly
 
@@ -154,6 +155,9 @@ class SampleGUIServerWindow(QMainWindow):
         self.button_choose = QPushButton('Send settings')
         self.button_choose.clicked.connect(self.on_choose_clicked)
 
+        self.button_update = QPushButton('Update software')
+        self.button_update.clicked.connect(self.on_update_clicked)
+
         self.save_history_button = QPushButton('Save history')
         self.save_history_button.clicked.connect(self.on_save_history)
 
@@ -163,6 +167,7 @@ class SampleGUIServerWindow(QMainWindow):
         hbox_row_2.addWidget(self.combo_box_cameras)
         hbox_row_2.addWidget(self.combo_box_image_types)
         hbox_row_2.addWidget(self.button_choose)
+        hbox_row_2.addWidget(self.button_update)
         hbox_row_2.addWidget(self.save_history_button)
         hbox_row_2.addWidget(self.clear_history_button)
 
@@ -193,6 +198,9 @@ class SampleGUIServerWindow(QMainWindow):
         except KeyError:
             logging.warning('%s is not available' % self.combo_box_cameras.currentText())
 
+    def on_update_clicked(self):
+        self.__cameras.update_camera_software(self.combo_box_cameras.currentText(), ['vsn-git'])
+
     def on_save_history(self):
         self.__cameras.save_cameras_data_to_files()
 
@@ -208,7 +216,6 @@ class SampleGUIServerWindow(QMainWindow):
                                                               ImageType[self.combo_box_image_types.currentText()]))
         else:
             client.send(VSNPacket.ConfigurationPacketToClient(client.id))
-            self.__add_new_camera(client)
 
     def on_client_connection_lost(self, client):
         self.log('Client %i disconnected' % client.id)
@@ -221,8 +228,6 @@ class SampleGUIServerWindow(QMainWindow):
             self.__no_clients_left = True
 
     def on_client_data_received(self, client, packet: VSNPacket.DataPacketToServer):
-        self.log('Received data from client %i' % client.id)
-
         self.service_client_data(
             packet.white_pixels,
             packet.activation_level,
@@ -233,7 +238,7 @@ class SampleGUIServerWindow(QMainWindow):
             self.service_client_image(packet.image)
 
     def on_client_configuration_received(self, client, packet: VSNPacket.ConfigurationPacketToServer):
-        self.log('Received client configuration')
+        self.log('Client picam%i reports VSN v%s' % (packet.node_id.zfill(2), packet.software_version))
         client.id = packet.node_id
         self.__add_new_camera(client)
 

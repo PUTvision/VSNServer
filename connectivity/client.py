@@ -9,7 +9,7 @@ class TCPClient(metaclass=ABCMeta):
         self.__reader, self.__writer = None, None
         self._loop = asyncio.get_event_loop()
         self._loop.run_until_complete(self.__connect(server_address, server_port))
-        self._loop.create_task(self.__receive())
+        self.__listening_task = self._loop.create_task(self.__receive())
 
     def __del__(self):
         if self.__writer is not None:
@@ -25,6 +25,11 @@ class TCPClient(metaclass=ABCMeta):
         encoded_data = pickle.dumps(obj)
         self.__writer.write(len(encoded_data).to_bytes(4, byteorder='big') + encoded_data)
 
+        try:
+            yield from self.__writer.drain()
+        except ConnectionResetError:
+            self.connection_lost(deliberate=False)
+
     @asyncio.coroutine
     def __receive(self):
         try:
@@ -36,20 +41,23 @@ class TCPClient(metaclass=ABCMeta):
                 obj = pickle.loads(pickled_obj)
                 self.data_received(obj)
         except asyncio.streams.IncompleteReadError:
-            self.connection_lost()
+            self.connection_lost(deliberate=False)
+        except asyncio.CancelledError:
+            self.connection_lost(deliberate=True)
 
     def send(self, object_to_send: object):
         self._loop.create_task(self.__send(object_to_send))
 
     def disconnect(self):
         self.__writer.close()
+        self.__listening_task.cancel()
 
     @abstractmethod
     def connection_made(self):
         ...
 
     @abstractmethod
-    def connection_lost(self):
+    def connection_lost(self, deliberate):
         ...
 
     @abstractmethod

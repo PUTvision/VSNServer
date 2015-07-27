@@ -1,3 +1,5 @@
+import logging
+
 from connectivity import client
 
 
@@ -8,9 +10,14 @@ class VSNClient(client.TCPClient):
         super().__init__(server_address, server_port)
 
     def connection_made(self):
-        pass
+        logging.info('Connection made')
 
-    def connection_lost(self):
+    def connection_lost(self, deliberate: bool):
+        if not deliberate:
+            logging.error('Connection lost')
+        else:
+            logging.info('Disconnected')
+
         self._loop.stop()
 
     def data_received(self, received_object: object):
