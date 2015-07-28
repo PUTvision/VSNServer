@@ -218,6 +218,10 @@ class SampleGUIServerWindow(QMainWindow):
             client.send(VSNPacket.ConfigurationPacketToClient(client.id))
 
     def on_client_connection_lost(self, client):
+        if client.id is not None:
+            self.__cameras.update_state(client.id, 0, 0)
+            self.__graphs_controller.set_new_values(client.id, 0, 0)
+            self.__update_status_monitor(client.id)
         self.log('Client %r disconnected' % client.id)
 
     def on_no_clients_left(self):
@@ -238,7 +242,7 @@ class SampleGUIServerWindow(QMainWindow):
             self.service_client_image(packet.image)
 
     def on_client_configuration_received(self, client, packet: VSNPacket.ConfigurationPacketToServer):
-        self.log('Client picam%s reports VSN v%s' % (str(packet.node_id).zfill(2), packet.software_version))
+        self.log('Client picam%s reports VSN version %s' % (str(packet.node_id).zfill(2), packet.software_version))
         client.id = packet.node_id
         self.__add_new_camera(client)
 

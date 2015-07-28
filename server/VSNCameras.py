@@ -16,7 +16,7 @@ class VSNCameras:
         camera_name = "picam" + str(camera_number).zfill(2)
         return camera_name
 
-    def __calculate_neighbour_activation_level(self, camera_name :str):
+    def __calculate_neighbour_activation_level(self, camera_name: str):
         self.__cameras[camera_name].activation_neighbours = 0.0
         for current_camera_name, camera in self.__cameras.items():
             self.__cameras[camera_name].activation_neighbours += \
