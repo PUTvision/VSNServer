@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from client.VSNUpdater import VSNUpdater
+from vsn.client import VSNUpdater
 
 if __name__ == '__main__':
     updater = VSNUpdater(pkgs_to_update=['vsn-git'])

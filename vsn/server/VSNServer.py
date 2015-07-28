@@ -1,7 +1,8 @@
 from enum import Enum
 
 from connectivity import server
-from common.VSNUtility import Config
+
+from vsn.common.VSNUtility import Config
 
 
 class ReceiveState(Enum):

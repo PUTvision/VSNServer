@@ -3,9 +3,10 @@
 import sys
 import time
 import asyncio
+import logging
+
 import numpy as np
 import cv2
-import logging
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -18,12 +19,12 @@ except ImportError:
 from quamash import QEventLoop
 from pyqtgraph.Qt import QtGui, QtCore
 
-from server.VSNServer import VSNServer
-from common import VSNPacket
-from common.VSNUtility import Config, ImageType
-from server.VSNGraph import VSNGraphController
-from server.VSNCameras import VSNCameras
-from connectivity import multicast
+from vsn.server.VSNServer import VSNServer
+from vsn.common import VSNPacket
+from vsn.common.VSNUtility import Config, ImageType
+from vsn.server.VSNGraph import VSNGraphController
+from vsn.server.VSNCameras import VSNCameras
+from vsn.connectivity import multicast
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

@@ -3,9 +3,8 @@
 import logging
 import argparse
 
-from client.VSNReactor import VSNReactor
-from client.VSNCamera import VSNCVCamera
-
+from vsn.client import VSNReactor
+from vsn.client import VSNCVCamera
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Handle camera with OpenCV and V4L2')

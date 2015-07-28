@@ -1,5 +1,6 @@
 from server.VSNCamera import VSNCamera
-from common.VSNUtility import Config
+
+from vsn.common.VSNUtility import Config
 
 
 class VSNCameras:

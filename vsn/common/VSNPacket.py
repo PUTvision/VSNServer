@@ -1,4 +1,4 @@
-from common.VSNUtility import Config
+from vsn.common.VSNUtility import Config
 
 
 class ConfigurationPacketToClient:

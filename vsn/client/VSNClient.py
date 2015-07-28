@@ -1,6 +1,6 @@
 import logging
 
-from connectivity import client
+from vsn.connectivity import client
 
 
 class VSNClient(client.TCPClient):

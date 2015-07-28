@@ -1,12 +1,12 @@
-import cv2
 import time
 import logging
-
 from abc import ABCMeta, abstractmethod
 from threading import Thread
 from subprocess import check_call, CalledProcessError
 
-from common.VSNUtility import Config
+import cv2
+
+from vsn.common.VSNUtility import Config
 
 
 class VSNCamera(metaclass=ABCMeta):

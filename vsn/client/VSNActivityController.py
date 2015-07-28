@@ -1,6 +1,6 @@
 import math
 
-from common.VSNUtility import GainSampletimeTuple
+from vsn.common.VSNUtility import GainSampletimeTuple
 
 
 class VSNActivityController:

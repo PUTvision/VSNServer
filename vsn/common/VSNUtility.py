@@ -1,9 +1,10 @@
-import yaml
 import os
 import sys
 from enum import Enum
 
-from common.decorators import autoinitialized
+import yaml
+
+from vsn.common import autoinitialized
 
 
 @autoinitialized

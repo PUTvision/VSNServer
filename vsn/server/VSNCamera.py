@@ -1,7 +1,8 @@
 import pickle
 
-from common.VSNUtility import GainSampletimeTuple, ImageType, Config
 from common.VSNPacket import ConfigurationPacketToClient
+
+from vsn.common.VSNUtility import GainSampletimeTuple, ImageType, Config
 
 
 class VSNCameraHistory:

@@ -1,18 +1,19 @@
 import asyncio
 import logging
 import socket
-import cv2
-import numpy
 import time
 
-from client.VSNUpdater import VSNUpdater
+import cv2
+import numpy
 from client.VSNImageProcessor import VSNImageProcessor
 from client.VSNActivityController import VSNActivityController
 from common.VSNPacket import DataPacketToServer, ClientPacketRouter, ConfigurationPacketToServer
 from client.VSNClient import VSNClient
-from common.VSNUtility import ImageType, Config
-from common.version import __version__
 from connectivity import multicast
+
+from client.VSNUpdater import VSNUpdater
+from vsn.common.VSNUtility import ImageType, Config
+from common.version import __version__
 
 
 class VSNReactor:
