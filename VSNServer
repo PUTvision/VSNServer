@@ -238,7 +238,7 @@ class SampleGUIServerWindow(QMainWindow):
             self.service_client_image(packet.image)
 
     def on_client_configuration_received(self, client, packet: VSNPacket.ConfigurationPacketToServer):
-        self.log('Client picam%i reports VSN v%s' % (packet.node_id.zfill(2), packet.software_version))
+        self.log('Client picam%s reports VSN v%s' % (str(packet.node_id).zfill(2), packet.software_version))
         client.id = packet.node_id
         self.__add_new_camera(client)
 
