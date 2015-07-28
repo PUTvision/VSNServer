@@ -15,7 +15,7 @@ class VSNCamera(metaclass=ABCMeta):
         ...
 
 
-class VSNCVCamera:
+class VSNCVCamera(VSNCamera):
     def __init__(self, camera_number: int):
         self.__camera = cv2.VideoCapture(camera_number)
         self.__camera.set(cv2.CAP_PROP_FRAME_WIDTH, Config.clients['image_size']['width'])
@@ -43,7 +43,7 @@ class VSNCVCamera:
         return self.__camera.retrieve()[1]
 
 
-class VSNPiCamera:
+class VSNPiCamera(VSNCamera):
     def __init__(self):
         import picamera
         import picamera.array

@@ -218,7 +218,7 @@ class SampleGUIServerWindow(QMainWindow):
             client.send(VSNPacket.ConfigurationPacketToClient(client.id))
 
     def on_client_connection_lost(self, client):
-        self.log('Client %i disconnected' % client.id)
+        self.log('Client %r disconnected' % client.id)
 
     def on_no_clients_left(self):
         if self.__exit_requested:
