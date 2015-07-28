@@ -1,7 +1,6 @@
 from enum import Enum
 
 from connectivity import server
-
 from vsn.common.VSNUtility import Config
 
 

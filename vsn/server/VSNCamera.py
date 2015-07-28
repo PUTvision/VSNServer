@@ -1,7 +1,6 @@
 import pickle
 
-from common.VSNPacket import ConfigurationPacketToClient
-
+from vsn.common.VSNPacket import ConfigurationPacketToClient
 from vsn.common.VSNUtility import GainSampletimeTuple, ImageType, Config
 
 
