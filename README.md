@@ -13,38 +13,49 @@ Each camera node is based on RaspberryPi board which is handling all the process
 Such solution enables to put most of the camera in the system into low power mode, and do the image processing relatively infrequently. As a result the whole system is saving power which can enable it to operate on battery. On the other hand thanks to the propagation of information about motion between cameras no important information is lost.
 
 # Languages and tools used
-Project is written in Python 2.7 and uses following libraries (+ all the prequisitions for those):
+Project is written in Python 3.4 and uses following libraries (+ all the prequisitions for those):
 * opencv - for image acquisition processing tasks,
-* twisted - for networking,
-* pyqtgraph - for plotting.
+* pyqtgraph - for plotting,
+* picamera - for capturing images (optional),
+* pyalpm - for updating client software.
 
 # Running the code
-Copy the repository to RaspberryPi (git clone) board and download ale the libraries required. If you already have the repository, do just git pull. Change the hostname of the RPi to one of the following: picam01, picam02, picam03, picam04, picam05.
+Copy the repository to RaspberryPi (git clone) board and install all the libraries required. If you already have the repository, do just git pull. Change the hostname of the RPi to one of the following: picam0n (where n is number) or switch hostname based ids off in config file.
 
-Start the server (server_qt) on the central node (should be 192.168.0.10 IP address), and then start camera (picam_generic) on each RPi.
+Start the server on the central node, and then start client software on each RPi.
 
 # Modules description
+Connectivity:
+* client
+* server
+* multicast
+
 Common:
+* decorators
+* version
 * VSNPacket
 * VSNUtility
 
 Server:
-* server_qt
-  * qt4reactor
-  * VSNServer
-  * VSNGraph
-  * VSNCameraData
+* VSNServer
+* VSNGraph
+* VSNCamera
+* VSNCameras
 
-Picam:
-* VSNPicam
-  * VSNClient
-  * VSNActivityController
-  * VSNImageProcessing
+Client:
+* VSNClient
+* VSNActivityController
+* VSNImageProcessor
+* VSNCamera
+* VSNReactor
+* VSNUpdater
 
-Tests:
-* picam_generic
-* picam01
-* picam02
+# Scripts description
+* VSNServer - run server software,
+* VSNClientCV - run client software using OpenCV for capturing,
+* VSNClientPiCamera - run client software using picamera for capturing,
+* VSNHistoryPlotter - view saved plots,
+* VSNUpdater - update software.
 
 # Future changes
 
