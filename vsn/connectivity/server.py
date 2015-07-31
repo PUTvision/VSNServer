@@ -8,14 +8,9 @@ class ConnectedClient:
         self.__loop = loop
         self.__writer = writer
         self.__address, self.__port = writer.get_extra_info('peername')
+        self.__sending_task = None
 
         self.id = None
-
-    def __del__(self):
-        try:
-            self.disconnect()
-        except RuntimeError:
-            pass
 
     @property
     def address(self):
@@ -31,9 +26,10 @@ class ConnectedClient:
         self.__writer.write(len(encoded_data).to_bytes(4, byteorder='big') + encoded_data)
 
     def send(self, object_to_send: object):
-        self.__loop.create_task(self.__send(object_to_send))
+        self.__sending_task = self.__loop.create_task(self.__send(object_to_send))
 
     def disconnect(self):
+        self.__sending_task.cancel()
         self.__writer.close()
 
 
@@ -42,9 +38,6 @@ class TCPServer(metaclass=ABCMeta):
         self.__loop = asyncio.get_event_loop()
         coro = asyncio.start_server(self.__run, address, port, loop=self.__loop)
         self.__server = self.__loop.run_until_complete(coro)
-
-    def __del__(self):
-        self.stop()
 
     @asyncio.coroutine
     def __run(self, reader, writer):

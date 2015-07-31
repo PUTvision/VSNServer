@@ -1,68 +1,68 @@
 import pyqtgraph as pg
 import numpy as np
+import asyncio
 
 
 class VSNGraphController:
-    def __init__(self):
-        self.__graphs = []
-        self.__graphs_ids = set()
+    __graphs = []
+    __graphs_ids = set()
 
-        # current activation level
-        self.__activations = np.zeros((30, 1))
-        # white pixel percentage
-        self.__percentages = np.zeros((30, 1))
+    # current activation level
+    __activations = np.zeros((30, 1))
 
-        # set default background color to white
-        pg.setConfigOption('background', 'w')
-        # open the plot window, set properties
-        self.__win = pg.GraphicsWindow(title='VSN activity monitor')
-        self.__win.resize(1400, 800)
+    # white pixel percentage
+    __percentages = np.zeros((30, 1))
 
-    def update_graphs(self):
-        for graph in self.__graphs:
-            graph_id = graph.id
-            graph.update_graph(self.__activations[graph_id], self.__percentages[graph_id])
+    __updating_task = None
 
-    def add_graph(self, camera_id: int):
-        if camera_id not in self.__graphs_ids:
-            new_graph = VSNGraph(camera_id)
-            new_graph.add_graph(self.__win)
-            self.__graphs.append(new_graph)
-            self.__graphs_ids.add(camera_id)
+    @classmethod
+    def set_new_values(cls, camera_id, activation, percentage):
+        cls.__activations[camera_id] = activation
+        cls.__percentages[camera_id] = percentage
 
-    def set_new_values(self, index, activation, percentage):
-        self.__activations[index] = activation
-        self.__percentages[index] = percentage
+    @classmethod
+    def create_plot(cls, camera_id: int, plot_item):
+        if cls.__updating_task is None:
+            cls.__updating_task = asyncio.get_event_loop().create_task(cls.__update_graphs())
 
-    def close(self):
-        self.__win.close()
+        new_plot = VSNGraph(camera_id, plot_item)
+        cls.__graphs.append(new_plot)
+        return new_plot
+
+    @classmethod
+    @asyncio.coroutine
+    def __update_graphs(cls):
+        while True:
+            for graph in cls.__graphs:
+                graph_id = graph.id
+                graph.update_graph(cls.__activations[graph_id], cls.__percentages[graph_id])
+            yield from asyncio.sleep(0.1)
+
+    @classmethod
+    def stop_updating(cls):
+        cls.__updating_task.cancel()
 
 
 class VSNGraph:
-    def __init__(self, camera_id):
+    def __init__(self, camera_id, plot_item):
         self.__id = camera_id
-        self.__plot_title = 'picam' + str(camera_id).zfill(2)
+        self.__plot_title = 'Camera %i' % camera_id
 
         self.__white_pixels_percentage = np.zeros(1)
         # self.neighbouring_node_activation_level = 0.0
         self.__activation_level_history = np.zeros(200)
 
         # graph elements
-        self.__curve = None
-        self.__bar = None
+        self.__curve = plot_item.plot(pen='r')
+        self.__bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
+        plot_item.addItem(self.__bar)
+
+        # set the scale of the plot
+        plot_item.setYRange(0, 200)
 
     @property
     def id(self):
         return self.__id
-
-    def add_graph(self, window):
-        # setup plot
-        cam_plot = window.addPlot(title=self.__plot_title, row=(self.__id - 1) // 2, col=(self.__id - 1) % 2)
-        self.__curve = cam_plot.plot(pen='r')
-        self.__bar = pg.PlotCurveItem([0, 200], [0], stepMode=True, fillLevel=0, brush=(0, 0, 255, 20))
-        cam_plot.addItem(self.__bar)
-        # set the scale of the plot
-        cam_plot.setYRange(0, 200)
 
     def update_graph(self, activation_level, white_pixels_percentage):
         self.__white_pixels_percentage = white_pixels_percentage
