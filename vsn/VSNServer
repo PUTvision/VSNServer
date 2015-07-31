@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+
+import sys
+import asyncio
+import logging
+import numpy
+import cv2
+
+from PyQt5.QtWidgets import QApplication
+from quamash import QEventLoop
+from vsn.server.VSNInterface import MainWindow
+from vsn.connectivity import multicast
+from vsn.server.VSNCameras import VSNCameras
+from vsn.server.VSNServer import VSNServer
+from vsn.common.VSNUtility import Config
+from vsn.common import VSNPacket
+from vsn.common.VSNUtility import CameraStatistics
+from vsn.server.VSNGraph import VSNGraphController
+
+
+class VSNServer2:
+    def __init__(self):
+        self.__main_window = MainWindow()
+
+        self.__vsn_server = VSNServer(
+            Config.server['listening_address'],
+            Config.server['listening_port'],
+            self.on_client_connection_made,
+            self.on_client_connection_lost,
+            self.on_no_clients_left,
+            VSNPacket.ServerPacketRouter(self.on_client_data_received, self.on_client_configuration_received)
+        )
+        self.__main_window.set_status('Waiting for connections...')
+        self.__broadcasting_server = multicast.Server()
+
+        self.__cameras = VSNCameras
+        self.__graphs_controller = VSNGraphController()
+
+    def __add_new_camera(self, client, camera_id, software_version):
+        self.__cameras.add_camera(client)
+        self.__main_window.add_new_camera_tab(camera_id, 'Camera %i %s' % (camera_id, software_version))
+
+    def on_client_connection_made(self, client):
+        self.__main_window.set_status('Client connecting...')
+
+        if Config.clients['hostname_based_ids']:
+            client.send(VSNPacket.ConfigurationPacketToClient())
+        else:
+            client.send(VSNPacket.ConfigurationPacketToClient(client.id))
+
+    def on_client_connection_lost(self, client):
+        if client.id is not None:
+            self.__cameras.update_state(client.id, 0, 0)
+        self.__main_window.set_status('Client %r disconnected' % client.id)
+
+    def on_no_clients_left(self):
+        pass
+
+    def on_client_data_received(self, client, packet: VSNPacket.DataPacketToServer):
+        logging.info('Client %i data received' % client.id)
+        self.service_client_data(
+            packet.white_pixels,
+            packet.activation_level,
+            packet.gain,
+            packet.sample_time,
+            client
+        )
+
+        if packet.image is not None:
+            print('servicing image')
+            self.service_client_image(client, packet.activation_level, packet.image)
+            pass
+
+    def on_client_configuration_received(self, client, packet: VSNPacket.ConfigurationPacketToServer):
+        camera_id = packet.node_id
+        client.id = camera_id
+        self.__main_window.set_status('Client %i connected' % client.id)
+        self.__add_new_camera(client, camera_id, packet.software_version)
+
+    def service_client_data(self, white_pixels: float, activation_level: float, gain: float, sample_time: float,
+                            client):
+        activation_neighbours = self.__cameras.update_state(client.id, activation_level, white_pixels)
+
+        packet_to_send = VSNPacket.DataPacketToClient(activation_neighbours)
+        client.send(packet_to_send)
+
+        statistics = CameraStatistics(white_pixels, activation_level, activation_neighbours, gain, sample_time,
+                                      self.__cameras.cameras[client.id].ticks_in_low_power_mode,
+                                      self.__cameras.cameras[client.id].ticks_in_normal_operation_mode)
+        self.__main_window.update_camera_statistics(client.id, statistics)
+
+        self.__graphs_controller.set_new_values(
+            client.id,
+            activation_level + activation_neighbours,
+            white_pixels
+        )
+
+    @staticmethod
+    def service_client_image(client, client_activity, image: str):
+        data = numpy.fromstring(image, dtype='uint8')
+        # decode jpg image to numpy array and display
+        decoded_image = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
+        VSNCameras.process_image(client, client_activity, decoded_image)
+
+    def close(self):
+        VSNGraphController.stop_updating()
+        self.__vsn_server.stop()
+
+    @property
+    def main_window(self):
+        return self.__main_window
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+
+    app = QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    server = VSNServer2()
+
+    main_window = server.main_window
+    main_window.show()
+
+    loop.run_forever()
+    main_window.close()
