@@ -1,6 +1,6 @@
 from enum import Enum
 
-from connectivity import server
+from vsn.connectivity import server
 from vsn.common.VSNUtility import Config
 
 
@@ -47,14 +47,14 @@ class VSNServer(server.TCPServer):
             client.send(obj)
 
     def client_connected(self, client: server.ConnectedClient):
-        if not Config.clients['hostname_based_ids']:
+        if not Config.settings['clients']['hostname_based_ids']:
             client.id = self.__find_free_id()
 
         self.__clients.append(client)
         self.__client_connected_callback(client)
 
     def client_disconnected(self, client: server.ConnectedClient):
-        if not Config.clients['hostname_based_ids']:
+        if not Config.settings['clients']['hostname_based_ids']:
             self.__free_id(client.id)
 
         self.__clients.remove(client)

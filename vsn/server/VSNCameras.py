@@ -4,16 +4,17 @@ from PyQt5.QtGui import QPixmap, QImage
 
 
 class VSNCameras:
-    __dependency_table = Config.dependencies
+    __dependency_table = Config.settings['dependencies']
     cameras = {}
     __preview_widgets = []
 
     @classmethod
     def __calculate_neighbour_activation_level(cls, camera_id: int):
         cls.cameras[camera_id].activation_neighbours = 0.0
+
         for current_camera_id in cls.cameras:
             cls.cameras[camera_id].activation_neighbours += \
-                cls.__dependency_table[camera_id][camera_id - 1] * \
+                cls.__dependency_table[camera_id][current_camera_id - 1] * \
                 cls.cameras[current_camera_id].percentage_of_active_pixels
 
         return cls.cameras[camera_id].activation_neighbours

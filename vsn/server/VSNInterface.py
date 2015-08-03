@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from pyqtgraph import PlotWidget
-from vsn.common.VSNUtility import CameraStatistics, Config
+from vsn.common.VSNUtility import CameraStatisticsTuple, Config
 from vsn.server.VSNGraph import VSNGraphController, VSNGraph
 from vsn.server.VSNCameras import VSNCameras
 
@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.camerasTabWidget.addTab(new_camera_widget, "")
             self.camerasTabWidget.setTabText(self.camerasTabWidget.indexOf(new_camera_widget), camera_name)
 
-    def update_camera_statistics(self, camera_id: int, statistics: CameraStatistics):
+    def update_camera_statistics(self, camera_id: int, statistics: CameraStatisticsTuple):
         camera_widget = getattr(self, 'cam%i' % camera_id)
         camera_widget.set_statistics(statistics)
 
@@ -92,23 +92,15 @@ class CameraWidget(QtWidgets.QWidget):
         self.__id = camera_id
 
         self.__controls()
+        self.__handlers()
         self.__titles()
         self.__layout()
 
+        self.__neighbours = neighbours
+
         for neighbour in neighbours:
-            neighbour_id = neighbour.id
-
-            new_dependency_label = QtWidgets.QLabel(self.dependenciesGroupBox)
-            new_dependency_spin_box = QtWidgets.QDoubleSpinBox(self.dependenciesGroupBox)
-
-            new_dependency_label.setText('Camera %i' % neighbour_id)
-            new_dependency_spin_box.setValue(self.__get_dependency_value(camera_id, neighbour_id))
-
-            setattr(self, 'dependencyCam%iLabel' % neighbour_id, new_dependency_label)
-            setattr(self, 'dependencyCam%iDoubleSpinBox' % neighbour_id, new_dependency_spin_box)
-
-            self.gridLayout_5.addWidget(new_dependency_label, neighbour_id, 0, 1, 1)
-            self.gridLayout_5.addWidget(new_dependency_spin_box, neighbour_id, 1, 1, 1)
+            self.add_dependency(neighbour.id)
+            neighbour.add_dependency(camera_id)
 
     @property
     def id(self):
@@ -118,10 +110,18 @@ class CameraWidget(QtWidgets.QWidget):
     def plot_controller(self):
         return self.__plot_controller
 
-    @staticmethod
-    def __get_dependency_value(camera_id: int, neighbour_id: int) -> float:
-        # TODO: consider moving to Config
-        return Config.dependencies[camera_id][neighbour_id - 1]
+    def add_dependency(self, neighbour_id):
+        new_dependency_label = QtWidgets.QLabel(self.dependenciesGroupBox)
+        new_dependency_spin_box = QtWidgets.QDoubleSpinBox(self.dependenciesGroupBox)
+
+        new_dependency_label.setText('Camera %i' % neighbour_id)
+        new_dependency_spin_box.setValue(Config.get_dependency_value(self.__id, neighbour_id))
+
+        setattr(self, 'dependencyCam%iLabel' % neighbour_id, new_dependency_label)
+        setattr(self, 'dependencyCam%iDoubleSpinBox' % neighbour_id, new_dependency_spin_box)
+
+        self.gridLayout_5.addWidget(new_dependency_label, neighbour_id, 0, 1, 1)
+        self.gridLayout_5.addWidget(new_dependency_spin_box, neighbour_id, 1, 1, 1)
 
     def __controls(self):
         self.cameraSettingsGroupBox = QtWidgets.QGroupBox(self)
@@ -164,6 +164,10 @@ class CameraWidget(QtWidgets.QWidget):
         self.cameraActivityGraph = PlotWidget(self.cameraStatisticsGroupBox, background='w')
         self.__plot_controller = VSNGraphController.create_plot(self.__id, self.cameraActivityGraph)
 
+    def __handlers(self):
+        self.setSettingsPushButton.clicked.connect(self.__set_settings)
+        self.saveSettingsPushButton.clicked.connect(Config.save_settings)
+
     def __titles(self):
         self.cameraSettingsGroupBox.setTitle("Camera settings")
         self.activationLevelThresholdLabel.setText("Activation level threshold:")
@@ -193,12 +197,12 @@ class CameraWidget(QtWidgets.QWidget):
         self.activityLevelTextLabel.setText("Activity level:")
         self.neighboursActivationTextLabel.setText("Neighbours activation:")
 
-        self.activationLevelThresholdSpinBox.setValue(Config.clients['activation_level_threshold'])
-        self.gainBelowThresholdDoubleSpinBox.setValue(Config.clients['parameters_below_threshold']['gain'])
-        self.sampleTimeBelowThresholdDoubleSpinBox.setValue(Config.clients['parameters_below_threshold']['sample_time'])
-        self.gainAboveThresholdDoubleSpinBox.setValue(Config.clients['parameters_above_threshold']['gain'])
-        self.sampleTimeAboveThresholdDoubleSpinBox.setValue(Config.clients['parameters_above_threshold']['sample_time'])
-        self.dependencySelfDoubleSpinBox.setValue(self.__get_dependency_value(self.__id, self.__id))
+        self.activationLevelThresholdSpinBox.setValue(Config.settings['clients']['activation_level_threshold'])
+        self.gainBelowThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_below_threshold']['gain'])
+        self.sampleTimeBelowThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_below_threshold']['sample_time'])
+        self.gainAboveThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_above_threshold']['gain'])
+        self.sampleTimeAboveThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_above_threshold']['sample_time'])
+        self.dependencySelfDoubleSpinBox.setValue(Config.get_dependency_value(self.__id, self.__id))
 
     def __layout(self):
         self.horizontalLayout = QtWidgets.QHBoxLayout(self)
@@ -251,7 +255,28 @@ class CameraWidget(QtWidgets.QWidget):
         self.gridLayout.addWidget(self.cameraActivityGraph, 7, 0, 1, 2)
         self.horizontalLayout.addWidget(self.cameraStatisticsGroupBox)
 
-    def set_statistics(self, statistics: CameraStatistics):
+    def __set_settings(self):
+        dependency_table = {}
+
+        for neighbour in self.__neighbours:
+            neighbour_id = neighbour.id
+
+            if neighbour_id != self.__id:
+                dependency_widget = getattr(self, 'dependencyCam%iDoubleSpinBox' % neighbour_id)
+            else:
+                dependency_widget = self.dependencySelfDoubleSpinBox
+
+            dependency_table[self.id] = {}
+            dependency_table[self.id][neighbour_id - 1] = dependency_widget.value()
+
+        Config.set_settings(self.gainBelowThresholdDoubleSpinBox.value(),
+                            self.sampleTimeBelowThresholdDoubleSpinBox.value(),
+                            self.gainAboveThresholdDoubleSpinBox.value(),
+                            self.sampleTimeAboveThresholdDoubleSpinBox.value(),
+                            self.activationLevelThresholdSpinBox.value(),
+                            dependency_table)
+
+    def set_statistics(self, statistics: CameraStatisticsTuple):
         self.activePixelsLabel.setText('%.2f' % statistics.active_pixels)
         self.activityLevelLabel.setText('%.2f' % statistics.activity_level)
         self.neighboursActivationLabel.setText('%.2f' % statistics.neighbours_activation)
