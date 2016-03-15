@@ -1,8 +1,9 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 from pyqtgraph import PlotWidget
-from vsn.common.VSNUtility import CameraStatisticsTuple, Config
-from vsn.server.VSNGraph import VSNGraphController, VSNGraph
-from vsn.server.VSNCameras import VSNCameras
+
+from vsn_server.common.utility import CameraStatisticsTuple, Config
+from vsn_server.processing.cameras import VSNCameras
+from vsn_server.ui.graph import VSNGraphController
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -199,9 +200,11 @@ class CameraWidget(QtWidgets.QWidget):
 
         self.activationLevelThresholdSpinBox.setValue(Config.settings['clients']['activation_level_threshold'])
         self.gainBelowThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_below_threshold']['gain'])
-        self.sampleTimeBelowThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_below_threshold']['sample_time'])
+        self.sampleTimeBelowThresholdDoubleSpinBox.setValue(
+            Config.settings['clients']['parameters_below_threshold']['sample_time'])
         self.gainAboveThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_above_threshold']['gain'])
-        self.sampleTimeAboveThresholdDoubleSpinBox.setValue(Config.settings['clients']['parameters_above_threshold']['sample_time'])
+        self.sampleTimeAboveThresholdDoubleSpinBox.setValue(
+            Config.settings['clients']['parameters_above_threshold']['sample_time'])
         self.dependencySelfDoubleSpinBox.setValue(Config.get_dependency_value(self.__id, self.__id))
 
     def __layout(self):

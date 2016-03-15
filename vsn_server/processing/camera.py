@@ -1,7 +1,7 @@
 import pickle
 
-from vsn.common.VSNPacket import ConfigurationPacketToClient
-from vsn.common.VSNUtility import GainSampletimeTuple, ImageType, Config
+from vsn_server.common.packet import ConfigurationPacketToClient
+from vsn_server.common.utility import GainSampletimeTuple, ImageType, Config
 
 
 class VSNCameraHistory:
@@ -50,10 +50,12 @@ class VSNCamera:
         self.__ticks_in_normal_operation_mode = 0
 
         # camera parameters
-        self.__params_below_threshold = GainSampletimeTuple(Config.settings['clients']['parameters_below_threshold']['gain'],
-                                                            Config.settings['clients']['parameters_below_threshold']['sample_time'])
-        self.__params_above_threshold = GainSampletimeTuple(Config.settings['clients']['parameters_above_threshold']['gain'],
-                                                            Config.settings['clients']['parameters_above_threshold']['sample_time'])
+        self.__params_below_threshold = GainSampletimeTuple(
+            Config.settings['clients']['parameters_below_threshold']['gain'],
+            Config.settings['clients']['parameters_below_threshold']['sample_time'])
+        self.__params_above_threshold = GainSampletimeTuple(
+            Config.settings['clients']['parameters_above_threshold']['gain'],
+            Config.settings['clients']['parameters_above_threshold']['sample_time'])
         self.__activation_level_threshold = Config.settings['clients']['activation_level_threshold']
         self.__parameters = self.__params_below_threshold  # sample time and gain at startup
         self.__currently_transmitting_image = False
@@ -142,4 +144,3 @@ class VSNCamera:
 
     def update_software(self, pkgs_to_update: list):
         self.__client.send(ConfigurationPacketToClient(pkgs_to_update=pkgs_to_update))
-

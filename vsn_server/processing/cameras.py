@@ -1,6 +1,7 @@
-from vsn.server.VSNCamera import VSNCamera
-from vsn.common.VSNUtility import Config
 from PyQt5.QtGui import QPixmap, QImage
+
+from vsn_server.common.utility import Config
+from vsn_server.processing.camera import VSNCamera
 
 
 class VSNCameras:

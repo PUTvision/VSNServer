@@ -1,7 +1,7 @@
 from enum import Enum
 
-from vsn.connectivity import server
-from vsn.common.VSNUtility import Config
+from vsn_server.connectivity import server_base
+from vsn_server.common.utility import Config
 
 
 class ReceiveState(Enum):
@@ -9,7 +9,7 @@ class ReceiveState(Enum):
     packet_image = 2
 
 
-class VSNServer(server.TCPServer):
+class VSNServer(server_base.TCPServer):
     def __init__(self, address: str, port: int,
                  client_connected_callback: callable([]),
                  client_disconnected_callback: callable([]),
@@ -46,14 +46,14 @@ class VSNServer(server.TCPServer):
         for client in self.__clients:
             client.send(obj)
 
-    def client_connected(self, client: server.ConnectedClient):
+    def client_connected(self, client: server_base.ConnectedClient):
         if not Config.settings['clients']['hostname_based_ids']:
             client.id = self.__find_free_id()
 
         self.__clients.append(client)
         self.__client_connected_callback(client)
 
-    def client_disconnected(self, client: server.ConnectedClient):
+    def client_disconnected(self, client: server_base.ConnectedClient):
         if not Config.settings['clients']['hostname_based_ids']:
             self.__free_id(client.id)
 
