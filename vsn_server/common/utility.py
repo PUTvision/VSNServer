@@ -21,7 +21,7 @@ class Config:
 
     @classmethod
     def initialize(cls):
-        for loc in os.path.join(os.pardir, os.pardir), os.path.expanduser('~/.config/vsn_server'), '/etc/vsn_server':
+        for loc in os.pardir, os.path.expanduser('~/.config/vsn_server'), '/etc/vsn_server':
             try:
                 with open(os.path.join(loc, 'vsn_config.yml')) as stream:
                     for key, value in yaml.load(stream).items():
