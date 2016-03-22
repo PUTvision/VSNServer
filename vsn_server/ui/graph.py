@@ -31,14 +31,13 @@ class VSNGraphController:
         return new_plot
 
     @classmethod
-    @asyncio.coroutine
-    def __update_graphs(cls):
+    async def __update_graphs(cls):
         while True:
             for graph in cls.__graphs:
                 graph_id = graph.id
                 graph.update_graph(cls.__activations[graph_id],
                                    cls.__percentages[graph_id])
-            yield from asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
 
     @classmethod
     def stop_updating(cls):

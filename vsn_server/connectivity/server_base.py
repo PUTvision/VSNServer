@@ -20,8 +20,7 @@ class ConnectedClient:
     def port(self):
         return self.__port
 
-    @asyncio.coroutine
-    def __send(self, obj: object):
+    async def __send(self, obj: object):
         encoded_data = pickle.dumps(obj)
         self.__writer.write(len(encoded_data).to_bytes(4, byteorder='big') +
                             encoded_data)
@@ -41,17 +40,16 @@ class TCPServer(metaclass=ABCMeta):
         coro = asyncio.start_server(self.__run, address, port, loop=self.__loop)
         self.__server = self.__loop.run_until_complete(coro)
 
-    @asyncio.coroutine
-    def __run(self, reader, writer):
+    async def __run(self, reader, writer):
         client = ConnectedClient(writer, self.__loop)
         self.client_connected(client)
 
         try:
             while True:
-                encoded_length = yield from reader.readexactly(4)
+                encoded_length = await reader.readexactly(4)
                 length = int.from_bytes(encoded_length, byteorder='big')
 
-                pickled_obj = yield from reader.readexactly(length)
+                pickled_obj = await reader.readexactly(length)
                 obj = pickle.loads(pickled_obj)
 
                 self.data_received(client, obj)
