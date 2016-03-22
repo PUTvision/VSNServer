@@ -23,10 +23,12 @@ class ConnectedClient:
     @asyncio.coroutine
     def __send(self, obj: object):
         encoded_data = pickle.dumps(obj)
-        self.__writer.write(len(encoded_data).to_bytes(4, byteorder='big') + encoded_data)
+        self.__writer.write(len(encoded_data).to_bytes(4, byteorder='big') +
+                            encoded_data)
 
     def send(self, object_to_send: object):
-        self.__sending_task = self.__loop.create_task(self.__send(object_to_send))
+        self.__sending_task = self.__loop.create_task(self.__send(
+            object_to_send))
 
     def disconnect(self):
         self.__sending_task.cancel()

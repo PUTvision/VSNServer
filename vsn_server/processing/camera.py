@@ -51,12 +51,12 @@ class VSNCamera:
 
         # camera parameters
         self.__params_below_threshold = GainSampletimeTuple(
-            Config.settings['clients']['parameters_below_threshold']['gain'],
-            Config.settings['clients']['parameters_below_threshold']['sample_time'])
+            Config['clients']['parameters_below_threshold']['gain'],
+            Config['clients']['parameters_below_threshold']['sample_time'])
         self.__params_above_threshold = GainSampletimeTuple(
-            Config.settings['clients']['parameters_above_threshold']['gain'],
-            Config.settings['clients']['parameters_above_threshold']['sample_time'])
-        self.__activation_level_threshold = Config.settings['clients']['activation_level_threshold']
+            Config['clients']['parameters_above_threshold']['gain'],
+            Config['clients']['parameters_above_threshold']['sample_time'])
+        self.__activation_level_threshold = Config['clients']['activation_level_threshold']
         self.__parameters = self.__params_below_threshold  # sample time and gain at startup
         self.__currently_transmitting_image = False
         self.__currently_set_image_type = ImageType.foreground

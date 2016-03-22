@@ -5,7 +5,7 @@ from vsn_server.processing.camera import VSNCamera
 
 
 class VSNCameras:
-    __dependency_table = Config.settings['dependencies']
+    __dependency_table = Config['dependencies']
     cameras = {}
     __preview_widgets = []
 
