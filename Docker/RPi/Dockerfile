@@ -6,10 +6,10 @@ ARG NUMBER_OF_THREADS=9
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    git python3-pip python3-setuptools python3-dev build-essential cmake curl \
-    pkg-config libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev \
-    libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
-    libatlas-base-dev gfortran && \
+    git python3-pip python3-setuptools python3-dev python3-numpy \
+    build-essential cmake curl pkg-config \
+    libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev \
+    libavcodec-dev libavformat-dev libswscale-dev libv4l-dev && \
 
     mkdir build && \
     cd build && \
