@@ -15,6 +15,8 @@ setup(
         'quamash',
         'git+https://github.com/pyqtgraph/pyqtgraph.git@develop',
         'numpy',
+        'msgpack-python',
+        'docker-py',
     ],
     packages=find_packages(),
     scripts=['bin/VSNServer', 'bin/VSNHistoryPlotter'],

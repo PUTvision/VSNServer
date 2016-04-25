@@ -3,15 +3,15 @@ import numpy as np
 import asyncio
 
 
-class VSNGraphController:
+class GraphController:
     __graphs = []
     __graphs_ids = set()
 
     # current activation level
-    __activations = np.zeros((30, 1))
+    __activations = {}
 
     # white pixel percentage
-    __percentages = np.zeros((30, 1))
+    __percentages = {}
 
     __updating_task = None
 
@@ -26,7 +26,7 @@ class VSNGraphController:
             cls.__updating_task = asyncio.get_event_loop().create_task(
                 cls.__update_graphs())
 
-        new_plot = VSNGraph(camera_id, plot_item)
+        new_plot = Graph(camera_id, plot_item)
         cls.__graphs.append(new_plot)
         return new_plot
 
@@ -44,7 +44,7 @@ class VSNGraphController:
         cls.__updating_task.cancel()
 
 
-class VSNGraph:
+class Graph:
     def __init__(self, camera_id, plot_item):
         self.__id = camera_id
         self.__plot_title = 'Camera %i' % camera_id

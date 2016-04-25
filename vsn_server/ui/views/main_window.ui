@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VSNServer</class>
+ <widget class="QMainWindow" name="VSNServer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>953</width>
+    <height>673</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QGroupBox" name="mostActiveCamerasGroupBox">
+      <property name="title">
+       <string>Most active cameras</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QGraphicsView" name="mostActivePreview3"/>
+       </item>
+       <item row="0" column="2">
+        <widget class="QGraphicsView" name="mostActivePreview1"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QGraphicsView" name="mostActivePreview2"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QGroupBox" name="allCamerasGroupBox">
+      <property name="title">
+       <string>All cameras</string>
+      </property>
+      <layout class="QGridLayout" name="allCamerasLayout"/>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>953</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuVSN">
+    <property name="title">
+     <string>VS&amp;NServer</string>
+    </property>
+    <addaction name="actionClose"/>
+   </widget>
+   <addaction name="menuVSN"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionClose">
+   <property name="text">
+    <string>&amp;Close</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionClose</sender>
+   <signal>triggered()</signal>
+   <receiver>VSNServer</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>476</x>
+     <y>339</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

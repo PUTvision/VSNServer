@@ -4,143 +4,27 @@ import asyncio
 import logging
 import sys
 
-import cv2
-import numpy
 from PyQt5.QtWidgets import QApplication
 from quamash import QEventLoop
 
-from vsn_server.common.packet import ConfigurationPacketToClient, \
-    ServerPacketRouter, DataPacketToServer, DataPacketToClient, \
-    ConfigurationPacketToServer
-from vsn_server.common.utility import CameraStatisticsTuple
-from vsn_server.common.utility import Config
-from vsn_server.connectivity import multicast
-from vsn_server.connectivity.server import VSNServer
-from vsn_server.processing.cameras import VSNCameras
-from vsn_server.ui.graph import VSNGraphController
-from vsn_server.ui.interface import MainWindow
+from vsn_server.ui.controllers.windows import MainWindow
 
 
-class VSNServerApp:
-    def __init__(self):
-        self.__main_window = MainWindow()
-
-        self.__vsn_server = VSNServer(
-            Config.settings['server']['listening_address'],
-            Config.settings['server']['listening_port'],
-            self.on_client_connection_made,
-            self.on_client_connection_lost,
-            self.on_no_clients_left,
-            ServerPacketRouter(self.on_client_data_received,
-                               self.on_client_configuration_received)
-        )
-        self.__main_window.set_status('Waiting for connections...')
-        self.__broadcasting_server = multicast.Server()
-
-        self.__cameras = VSNCameras
-        self.__graphs_controller = VSNGraphController()
-
-        Config.add_configuration_changed_callback(self.on_configuration_changed)
-
-    def __add_new_camera(self, client, camera_id, software_version):
-        self.__cameras.add_camera(client)
-        self.__main_window.add_new_camera_tab(camera_id, 'Camera %i %s' %
-                                              (camera_id, software_version))
-
-    def on_client_connection_made(self, client):
-        self.__main_window.set_status('Client connecting...')
-
-        if Config.settings['clients']['hostname_based_ids']:
-            client.send(ConfigurationPacketToClient())
-        else:
-            client.send(ConfigurationPacketToClient(client.id))
-
-    def on_client_connection_lost(self, client):
-        if client.id is not None:
-            self.__cameras.update_state(client.id, 0, 0)
-        self.__main_window.set_status('Client %r disconnected' % client.id)
-
-    def on_no_clients_left(self):
-        pass
-
-    def on_client_data_received(self, client, packet: DataPacketToServer):
-        logging.info('Client %i data received' % client.id)
-        self.service_client_data(
-            packet.white_pixels,
-            packet.activation_level,
-            packet.gain,
-            packet.sample_time,
-            client
-        )
-
-        if packet.image is not None:
-            self.service_client_image(client, packet.activation_level,
-                                      packet.image)
-            pass
-
-    def on_client_configuration_received(self, client,
-                                         packet: ConfigurationPacketToServer):
-        camera_id = packet.node_id
-        client.id = camera_id
-        self.__main_window.set_status('Client %i connected' % client.id)
-        self.__add_new_camera(client, camera_id, packet.software_version)
-
-    def on_configuration_changed(self):
-        logging.info('Sending new configuration')
-        self.__vsn_server.send_to_all_clients(ConfigurationPacketToClient())
-
-    def service_client_data(self, white_pixels: float, activation_level: float,
-                            gain: float, sample_time: float, client):
-        activation_neighbours = self.__cameras.update_state(client.id,
-                                                            activation_level,
-                                                            white_pixels)
-
-        packet_to_send = DataPacketToClient(activation_neighbours)
-        client.send(packet_to_send)
-
-        camera = self.__cameras.cameras[client.id]
-        statistics = CameraStatisticsTuple(
-            white_pixels, activation_level,
-            activation_neighbours, gain,
-            sample_time,
-            camera.ticks_in_low_power_mode,
-            camera.ticks_in_normal_operation_mode
-        )
-        self.__main_window.update_camera_statistics(client.id, statistics)
-
-        self.__graphs_controller.set_new_values(
-            client.id,
-            activation_level + activation_neighbours,
-            white_pixels
-        )
-
-    @staticmethod
-    def service_client_image(client, client_activity, image: str):
-        data = numpy.fromstring(image, dtype='uint8')
-        # decode jpg image to numpy array and display
-        decoded_image = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
-        VSNCameras.process_image(client, client_activity, decoded_image)
-
-    def close(self):
-        VSNGraphController.stop_updating()
-        self.__vsn_server.stop()
-
-    @property
-    def main_window(self):
-        return self.__main_window
-
-
-if __name__ == '__main__':
+def main():
     logging.basicConfig(level=logging.INFO)
 
     app = QApplication(sys.argv)
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    server = VSNServerApp()
+    # server = VSNServerApp()
 
-    main_window = server.main_window
+    main_window = MainWindow()
     main_window.show()
 
     loop.run_forever()
     main_window.close()
+
+
+if __name__ == '__main__':
+    main()
