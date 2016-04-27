@@ -1,4 +1,4 @@
-FROM dock0/arch
+FROM rivi/archlinux
 
 RUN pacman --noconfirm -Syu opencv python-numpy && \
     yes | pacman -Scc
