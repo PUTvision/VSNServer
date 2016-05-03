@@ -4,32 +4,26 @@ from docker import Client
 
 
 class DockerGovernor:
-    def __init__(self, daemon_url: str):
+    def __init__(self, daemon_url: str, hostname: str):
         self._client = Client(daemon_url)
-        self._container = None
+        self._client_hostname = hostname
+        self._container_id = None
 
     def run(self):
-        print(socket.gethostbyname(socket.getfqdn()))
         if len(self._client.images('rivi/vsn')) != 0:
             print('image exists')
             # Image exists
-            container = self._client.create_container(
-                image='rivi/vsn', command='VSNClientPiCamera',
-                host_config=self._client.create_host_config(binds={
-                    '/dev/video0': {
-                        'bind': '/dev/video0',
-                        'mode': 'rw',
-                    }
-                }),
-                environment={
+            self._container_id = self._client.create_container(
+                image='rivi/vsn:armv6h', command='VSNClientCV',
+                host_config=self._client.create_host_config(devices=[
+                    '/dev/video0:/dev/video0:rwm'
+                ]), hostname=self._client_hostname, environment={
                     'SERVER_ADDRESS': socket.gethostbyname(socket.getfqdn())
                 }
-            )
+            ).get('Id')
             print('Before start')
-            container.start()
+            response = self._client.start(container=self._container_id)
             print('After start')
-
-            self._container = container
         else:
             print('image does not exist')
             print(self._client.pull('rivi/vsn', 'armv6h'))

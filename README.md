@@ -47,7 +47,6 @@ RPi.
 ## Modules description
 Connectivity:
 * server
-* multicast
 
 Common:
 * decorators

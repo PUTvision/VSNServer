@@ -12,11 +12,13 @@ setup(
     url='https://github.com/PUTvision/VSNServer',
     install_requires=[
         'PyYAML',
+        'PyQt5',
         'quamash',
         'git+https://github.com/pyqtgraph/pyqtgraph.git@develop',
         'numpy',
         'msgpack-python',
         'docker-py',
+        'zeroconf'
     ],
     packages=find_packages(),
     scripts=['bin/VSNServer', 'bin/VSNHistoryPlotter'],

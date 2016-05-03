@@ -20,5 +20,5 @@ clients:
   activation_threshold: 15
 
 dependencies:
-  put:
-    put: 0.0
+  raspberrypi:
+    raspberrypi: 0.0

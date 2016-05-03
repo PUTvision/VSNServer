@@ -21,7 +21,8 @@ class DockerFinder:
         url = 'tcp://{}:{}'.format(
             '.'.join(map(str, unpack('BBBB', info.address))), info.port
         )
+        hostname = info.server.split('.local')[0]
 
-        governor = DockerGovernor(url)
+        governor = DockerGovernor(url, hostname)
         self._governors[info.server] = governor
         governor.run()

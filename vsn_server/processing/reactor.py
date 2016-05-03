@@ -1,7 +1,6 @@
 import logging
 
 import asyncio
-import cv2
 import numpy as np
 
 from vsn_server.connectivity.packets import DataPacket
@@ -39,7 +38,8 @@ class Reactor:
 
         if packet['image'] is not None:
             image_data = np.fromstring(packet['image'], dtype='uint8')
-            decoded_image = cv2.imdecode(image_data, cv2.IMREAD_GRAYSCALE)
+            # decoded_image = cv2.imdecode(image_data, cv2.IMREAD_GRAYSCALE)
+            decoded_image = None
             self.__manager.cameras[client.id].set_frame(decoded_image)
 
         asyncio.wait(task)

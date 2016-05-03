@@ -4,7 +4,6 @@ from vsn_server.ui.controllers.widgets import CameraWidget
 from vsn_server.processing.reactor import Reactor
 from vsn_server.connectivity.server import Server
 from vsn_server.common.utility import Config
-from vsn_server.connectivity.multicast import MulticastServer
 
 
 class MainWindow(QMainWindow):
@@ -19,7 +18,6 @@ class MainWindow(QMainWindow):
             Config['server']['listening_port'],
             Reactor(self)
         )
-        self._broadcasting_server = MulticastServer()
 
         self.cameras = {}
 
